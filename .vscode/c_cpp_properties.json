@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/vinz/Downloads/arduino-1.8.19/hardware/**",
+                "/home/vinz/Downloads/arduino-1.8.19/libraries/**",
+                "/home/vinz/Downloads/arduino-1.8.19/tools/**",
+                "/home/vinz/Downloads/arduino-1.8.19/**",
+                "/home/vinz/Downloads/arduino-1.8.19/lib/**",
+                "/home/vinz/Arduino/libraries/**",
+                "/home/vinz/ucr2021-2022/cs120b/rogue/**"
+            ],
+            "defines": [
+                "USBCON",
+                "ARDUINO=10813"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}
