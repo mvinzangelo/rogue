@@ -12,11 +12,19 @@ LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 const int clk = 9, din = 13, d_c = 12, ce = 10, rst = 11;
 Adafruit_PCD8544 nokiaScreen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
 
+// struct player
+struct player
+{
+  int x = 0;
+  int y = 0;
+  char player_avatar = '@';
+} player;
+
 // game screen global struct
 struct game_screen
 {
-  int rows = 6;
-  int columns = 14;
+  const char rows = 6;
+  const char columns = 14;
   char game_screen_buffer[6][14]{
       {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -146,23 +154,23 @@ int SM_JOYSTICK_INPUT_Tick(int state)
     break;
   case SM_JOYSTICK_INPUT_NEUTRAL:
     currInput = NEUTRAL;
-    // Serial.println("NEUTRAL");
+    Serial.println("NEUTRAL");
     break;
   case SM_JOYSTICK_INPUT_LEFT:
     currInput = LEFT;
-    // Serial.println("LEFT");
+    Serial.println("LEFT");
     break;
   case SM_JOYSTICK_INPUT_RIGHT:
     currInput = RIGHT;
-    // Serial.println("RIGHT");
+    Serial.println("RIGHT");
     break;
   case SM_JOYSTICK_INPUT_UP:
     currInput = UP;
-    // Serial.println("UP");
+    Serial.println("UP");
     break;
   case SM_JOYSTICK_INPUT_DOWN:
     currInput = DOWN;
-    // Serial.println("DOWN");
+    Serial.println("DOWN");
     break;
   }
 
@@ -178,20 +186,30 @@ enum SM_GAME_STATES
 
 int SM_GAME_Tick(int state)
 {
-  switch (state)
+  // Serial.println(currInput);
+  switch (currInput)
   {
-  case SM_GAME_OVERWORLD:
+  case UP:
+    player.y--;
+    break;
+  case DOWN:
+    player.y++;
+    break;
+  case LEFT:
+    player.x--;
+    break;
+  case RIGHT:
+    player.x++;
+    break;
+  default:
+    Serial.println(currInput);
     break;
   }
-  switch (state)
-  {
-  case SM_GAME_OVERWORLD:
-    nokiaScreen.clearDisplay();
-    nokiaScreen.setCursor(0, 0);
-    nokiaScreen.println(game_screen.get_screen_buffer().c_str());
-    nokiaScreen.display();
-    break;
-  }
+  game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
+  nokiaScreen.clearDisplay();
+  nokiaScreen.setCursor(0, 0);
+  nokiaScreen.println(game_screen.get_screen_buffer().c_str());
+  nokiaScreen.display();
 }
 
 typedef struct task
@@ -220,7 +238,7 @@ void setup()
   tasks[i].TickFct = &SM_JOYSTICK_INPUT_Tick;
   i++;
   tasks[i].state = SM_GAME_OVERWORLD;
-  tasks[i].period = 100;
+  tasks[i].period = 200;
   tasks[i].elapsedTime = 0;
   tasks[i].TickFct = &SM_GAME_Tick;
 
