@@ -1,5 +1,5 @@
 {
     "board": "arduino:avr:uno",
     "sketch": "vmadr010_custom_lab.ino",
-    "port": "/dev/ttyACM1"
+    "port": "/dev/ttyACM0"
 }

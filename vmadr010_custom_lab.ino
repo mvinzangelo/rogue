@@ -6,24 +6,23 @@
 #include <LiquidCrystal.h>
 
 // display variables
-
 const int rs = 8, en = 7, d4 = 6, d5 = 5, d6 = 4, d7 = 3;
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 
 const int clk = 9, din = 13, d_c = 12, ce = 10, rst = 11;
 Adafruit_PCD8544 nokiaScreen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
 
-// screen struct
-struct game_screen_struct
+// game screen global struct
+struct game_screen
 {
   int rows = 6;
   int columns = 14;
   char game_screen_buffer[6][14]{
       {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
-      {'|', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '|'},
-      {'|', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '|'},
-      {'|', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '|'},
-      {'|', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '}};
   std::string get_screen_buffer()
   {
@@ -187,6 +186,10 @@ int SM_GAME_Tick(int state)
   switch (state)
   {
   case SM_GAME_OVERWORLD:
+    nokiaScreen.clearDisplay();
+    nokiaScreen.setCursor(0, 0);
+    nokiaScreen.println(game_screen.get_screen_buffer().c_str());
+    nokiaScreen.display();
     break;
   }
 }
@@ -200,7 +203,7 @@ typedef struct task
 } task;
 
 int delay_gcd;
-const unsigned short tasksNum = 1;
+const unsigned short tasksNum = 2;
 task tasks[tasksNum];
 
 void setup()
@@ -215,6 +218,11 @@ void setup()
   tasks[i].period = 100;
   tasks[i].elapsedTime = 0;
   tasks[i].TickFct = &SM_JOYSTICK_INPUT_Tick;
+  i++;
+  tasks[i].state = SM_GAME_OVERWORLD;
+  tasks[i].period = 100;
+  tasks[i].elapsedTime = 0;
+  tasks[i].TickFct = &SM_GAME_Tick;
 
   delay_gcd = 100; // GCD
   lcd.begin(16, 2);
@@ -222,13 +230,10 @@ void setup()
 
   nokiaScreen.setRotation(2);
   nokiaScreen.begin();
-  nokiaScreen.clearDisplay();
   nokiaScreen.setContrast(50);
+  nokiaScreen.clearDisplay();
   nokiaScreen.setTextSize(1);
   nokiaScreen.setTextColor(BLACK);
-  nokiaScreen.setCursor(0, 0);
-  nokiaScreen.println(game_screen.get_screen_buffer().c_str());
-  nokiaScreen.display();
 
   lcd.clear();
   lcd.print("Hello, world!");
