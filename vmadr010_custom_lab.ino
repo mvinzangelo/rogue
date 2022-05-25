@@ -5,6 +5,9 @@
 #include <Adafruit_PCD8544.h>
 #include <LiquidCrystal.h>
 
+#define ROWS 6
+#define COLUMNS 14
+
 // display variables
 const int rs = 8, en = 7, d4 = 6, d5 = 5, d6 = 4, d7 = 3;
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
@@ -15,35 +18,67 @@ Adafruit_PCD8544 nokiaScreen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
 // struct player
 struct player
 {
-  int x = 0;
-  int y = 0;
+  int x = 4;
+  int y = 3;
   char player_avatar = '@';
 } player;
+
+// room class
+enum DOOR_LOCATION
+{
+  DOOR_TOP,
+  DOOR_BOTTOM,
+  DOOR_LEFT,
+  DOOR_RIGHT
+};
+struct room
+{
+  char room_layout[ROWS][COLUMNS];
+  DOOR_LOCATION door;
+};
+
+// rooms
+struct room room_1
+{
+  {
+      {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
+  },
+      DOOR_LEFT
+};
 
 // game screen global struct
 struct game_screen
 {
-  const char rows = 6;
-  const char columns = 14;
-  char game_screen_buffer[6][14]{
-      {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '}};
+  char game_screen_buffer[ROWS][COLUMNS];
+  // methods
   std::string get_screen_buffer()
   {
     std::string tmp;
     int count = 0;
-    for (int i = 0; i < rows; i++)
+    for (int i = 0; i < ROWS; i++)
     {
-      for (int j = 0; j < columns; j++)
+      for (int j = 0; j < COLUMNS; j++)
       {
         tmp.push_back(game_screen_buffer[i][j]);
       }
     }
     return tmp;
+  }
+  void copy_room_into_buffer(char curr[ROWS][COLUMNS])
+  {
+    for (int i = 0; i < ROWS; i++)
+    {
+      for (int j = 0; j < COLUMNS; j++)
+      {
+        game_screen_buffer[i][j] = curr[i][j];
+      }
+    }
+    return;
   }
 } game_screen;
 
@@ -55,7 +90,7 @@ const int joystickBtn = 2;
 const int xAxis_median = 500;
 const int yAxis_median = 500;
 
-enum CODE_INPUT
+enum JOYSTICK_INPUT
 {
   LEFT,
   UP,
@@ -64,7 +99,7 @@ enum CODE_INPUT
   NEUTRAL
 } input;
 
-static CODE_INPUT currInput = NEUTRAL;
+static JOYSTICK_INPUT currInput = NEUTRAL;
 
 // input state machine
 
@@ -186,30 +221,53 @@ enum SM_GAME_STATES
 
 int SM_GAME_Tick(int state)
 {
-  // Serial.println(currInput);
-  switch (currInput)
+  switch (state)
   {
-  case UP:
-    player.y--;
-    break;
-  case DOWN:
-    player.y++;
-    break;
-  case LEFT:
-    player.x--;
-    break;
-  case RIGHT:
-    player.x++;
-    break;
-  default:
-    Serial.println(currInput);
+  case SM_GAME_OVERWORLD:
     break;
   }
-  game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
-  nokiaScreen.clearDisplay();
-  nokiaScreen.setCursor(0, 0);
-  nokiaScreen.println(game_screen.get_screen_buffer().c_str());
-  nokiaScreen.display();
+  switch (state)
+  {
+  case SM_GAME_OVERWORLD:
+    switch (currInput)
+    {
+    case UP:
+      if (room_1.room_layout[player.y - 1][player.x] != '-')
+      {
+        player.y--;
+      }
+      break;
+    case DOWN:
+      if (room_1.room_layout[player.y + 1][player.x] != '-')
+      {
+        player.y++;
+      }
+      break;
+    case LEFT:
+      if (room_1.room_layout[player.y][player.x - 1] != '|')
+      {
+        player.x--;
+      }
+      break;
+    case RIGHT:
+      if (room_1.room_layout[player.y][player.x + 1] != '|')
+      {
+        player.x++;
+      }
+      break;
+    default:
+      Serial.println(currInput);
+      break;
+    }
+    game_screen.copy_room_into_buffer(room_1.room_layout);
+    game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
+    nokiaScreen.clearDisplay();
+    nokiaScreen.setCursor(0, 0);
+    nokiaScreen.println(game_screen.get_screen_buffer().c_str());
+    nokiaScreen.display();
+    break;
+  }
+  return state;
 }
 
 typedef struct task
