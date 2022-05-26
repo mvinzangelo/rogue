@@ -42,7 +42,7 @@ struct room room_1
 {
   {
     {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
-        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+        {'|', ' ', ' ', ' ', ' ', 'R', 'O', 'O', 'M', '1', ' ', ' ', ' ', '|'},
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -55,7 +55,7 @@ struct room room_2
     {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {'|', ' ', ' ', 'R', 'O', 'O', 'M', '2', ' ', ' ', ' ', ' ', ' ', ' '},
         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
         {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
   }
@@ -262,13 +262,23 @@ short SM_GAME_Tick(short state)
       }
       break;
     case LEFT:
-      if (curr_room->room_layout[player.y][player.x - 1] != '|')
+      if (player.x == 0)
+      {
+        curr_room = curr_room->adjacent_rooms[DOOR_LEFT];
+        player.x = COLUMNS - 1;
+      }
+      else if (curr_room->room_layout[player.y][player.x - 1] != '|')
       {
         player.x--;
       }
       break;
     case RIGHT:
-      if (curr_room->room_layout[player.y][player.x + 1] != '|')
+      if (player.x == COLUMNS - 1)
+      {
+        curr_room = curr_room->adjacent_rooms[DOOR_RIGHT];
+        player.x = 0;
+      }
+      else if (curr_room->room_layout[player.y][player.x + 1] != '|')
       {
         player.x++;
       }
@@ -277,7 +287,7 @@ short SM_GAME_Tick(short state)
       Serial.println(currInput);
       break;
     }
-    game_screen.copy_room_to_buffer(room_1.room_layout);
+    game_screen.copy_room_to_buffer(curr_room->room_layout);
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
     nokiaScreen.clearDisplay();
     nokiaScreen.setCursor(0, 0);
