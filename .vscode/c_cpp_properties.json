@@ -5,7 +5,7 @@
             "name": "Linux",
             "compilerPath": "/usr/bin/clang",
             "compilerArgs": [],
-            "intelliSenseMode": "linux-clang-x64",
+            "intelliSenseMode": "",
             "includePath": [
                 "${workspaceFolder}/**",
                 "/home/vinz/Downloads/arduino-1.8.19/hardware/**",

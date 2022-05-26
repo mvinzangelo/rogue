@@ -87,7 +87,7 @@ struct game_screen
     }
     return tmp;
   }
-  void copy_room_shorto_buffer(char curr[ROWS][COLUMNS])
+  void copy_room_to_buffer(char curr[ROWS][COLUMNS])
   {
     for (short i = 0; i < ROWS; i++)
     {
@@ -277,7 +277,7 @@ short SM_GAME_Tick(short state)
       Serial.println(currInput);
       break;
     }
-    game_screen.copy_room_shorto_buffer(room_1.room_layout);
+    game_screen.copy_room_to_buffer(room_1.room_layout);
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
     nokiaScreen.clearDisplay();
     nokiaScreen.setCursor(0, 0);
