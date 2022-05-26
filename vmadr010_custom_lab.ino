@@ -9,17 +9,17 @@
 #define COLUMNS 14
 
 // display variables
-const int rs = 8, en = 7, d4 = 6, d5 = 5, d6 = 4, d7 = 3;
+const short rs = 8, en = 7, d4 = 6, d5 = 5, d6 = 4, d7 = 3;
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 
-const int clk = 9, din = 13, d_c = 12, ce = 10, rst = 11;
+const short clk = 9, din = 13, d_c = 12, ce = 10, rst = 11;
 Adafruit_PCD8544 nokiaScreen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
 
 // struct player
 struct player
 {
-  int x = 4;
-  int y = 3;
+  short x = 4;
+  short y = 3;
   char player_avatar = '@';
 } player;
 
@@ -77,21 +77,21 @@ struct game_screen
   std::string get_screen_buffer()
   {
     std::string tmp;
-    int count = 0;
-    for (int i = 0; i < ROWS; i++)
+    short count = 0;
+    for (short i = 0; i < ROWS; i++)
     {
-      for (int j = 0; j < COLUMNS; j++)
+      for (short j = 0; j < COLUMNS; j++)
       {
         tmp.push_back(game_screen_buffer[i][j]);
       }
     }
     return tmp;
   }
-  void copy_room_into_buffer(char curr[ROWS][COLUMNS])
+  void copy_room_shorto_buffer(char curr[ROWS][COLUMNS])
   {
-    for (int i = 0; i < ROWS; i++)
+    for (short i = 0; i < ROWS; i++)
     {
-      for (int j = 0; j < COLUMNS; j++)
+      for (short j = 0; j < COLUMNS; j++)
       {
         game_screen_buffer[i][j] = curr[i][j];
       }
@@ -102,11 +102,11 @@ struct game_screen
 
 // inputs variables
 
-const int xAxis = A0;
-const int yAxis = A1;
-const int joystickBtn = 2;
-const int xAxis_median = 500;
-const int yAxis_median = 500;
+const short xAxis = A0;
+const short yAxis = A1;
+const short joystickBtn = 2;
+const short xAxis_median = 500;
+const short yAxis_median = 500;
 
 enum JOYSTICK_INPUT
 {
@@ -131,7 +131,7 @@ enum SM_JOYSTICK_INPUT_States
   SM_JOYSTICK_INPUT_DOWN,
 };
 
-int SM_JOYSTICK_INPUT_Tick(int state)
+short SM_JOYSTICK_INPUT_Tick(short state)
 {
   switch (state)
   {
@@ -237,7 +237,7 @@ enum SM_GAME_STATES
   SM_GAME_OVERWORLD
 };
 
-int SM_GAME_Tick(int state)
+short SM_GAME_Tick(short state)
 {
   switch (state)
   {
@@ -277,7 +277,7 @@ int SM_GAME_Tick(int state)
       Serial.println(currInput);
       break;
     }
-    game_screen.copy_room_into_buffer(room_1.room_layout);
+    game_screen.copy_room_shorto_buffer(room_1.room_layout);
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
     nokiaScreen.clearDisplay();
     nokiaScreen.setCursor(0, 0);
@@ -290,13 +290,13 @@ int SM_GAME_Tick(int state)
 
 typedef struct task
 {
-  int state;
+  short state;
   unsigned long period;
   unsigned long elapsedTime;
-  int (*TickFct)(int);
+  short (*TickFct)(short);
 } task;
 
-int delay_gcd;
+short delay_gcd;
 const unsigned short tasksNum = 2;
 task tasks[tasksNum];
 
@@ -331,7 +331,7 @@ void setup()
   nokiaScreen.setTextColor(BLACK);
 
   lcd.clear();
-  lcd.print("Hello, world!");
+  lcd.println("Hello, world!");
 }
 
 void loop()
