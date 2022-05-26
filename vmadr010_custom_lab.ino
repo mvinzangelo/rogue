@@ -34,22 +34,40 @@ enum DOOR_LOCATION
 struct room
 {
   char room_layout[ROWS][COLUMNS];
-  DOOR_LOCATION door;
+  room *adjacent_rooms[4];
 };
 
 // rooms
 struct room room_1
 {
   {
-      {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
-  },
-      DOOR_LEFT
+    {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
+        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+        {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
+  }
 };
+struct room room_2
+{
+  {
+    {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
+        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+        {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
+  }
+};
+
+void set_adjacent_rooms()
+{
+  room_1.adjacent_rooms[DOOR_LEFT] = &room_2;
+  room_2.adjacent_rooms[DOOR_RIGHT] = &room_1;
+}
+
+room *curr_room = &room_1;
 
 // game screen global struct
 struct game_screen
@@ -189,23 +207,23 @@ int SM_JOYSTICK_INPUT_Tick(int state)
     break;
   case SM_JOYSTICK_INPUT_NEUTRAL:
     currInput = NEUTRAL;
-    Serial.println("NEUTRAL");
+    // Serial.println("NEUTRAL");
     break;
   case SM_JOYSTICK_INPUT_LEFT:
     currInput = LEFT;
-    Serial.println("LEFT");
+    // Serial.println("LEFT");
     break;
   case SM_JOYSTICK_INPUT_RIGHT:
     currInput = RIGHT;
-    Serial.println("RIGHT");
+    // Serial.println("RIGHT");
     break;
   case SM_JOYSTICK_INPUT_UP:
     currInput = UP;
-    Serial.println("UP");
+    // Serial.println("UP");
     break;
   case SM_JOYSTICK_INPUT_DOWN:
     currInput = DOWN;
-    Serial.println("DOWN");
+    // Serial.println("DOWN");
     break;
   }
 
@@ -232,25 +250,25 @@ int SM_GAME_Tick(int state)
     switch (currInput)
     {
     case UP:
-      if (room_1.room_layout[player.y - 1][player.x] != '-')
+      if (curr_room->room_layout[player.y - 1][player.x] != '-')
       {
         player.y--;
       }
       break;
     case DOWN:
-      if (room_1.room_layout[player.y + 1][player.x] != '-')
+      if (curr_room->room_layout[player.y + 1][player.x] != '-')
       {
         player.y++;
       }
       break;
     case LEFT:
-      if (room_1.room_layout[player.y][player.x - 1] != '|')
+      if (curr_room->room_layout[player.y][player.x - 1] != '|')
       {
         player.x--;
       }
       break;
     case RIGHT:
-      if (room_1.room_layout[player.y][player.x + 1] != '|')
+      if (curr_room->room_layout[player.y][player.x + 1] != '|')
       {
         player.x++;
       }
@@ -284,8 +302,9 @@ task tasks[tasksNum];
 
 void setup()
 {
-
   Serial.begin(9600);
+
+  set_adjacent_rooms();
 
   // randomSeed(analogRead(0));
 
