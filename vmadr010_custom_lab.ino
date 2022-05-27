@@ -4,6 +4,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
 #include <LiquidCrystal.h>
+#include <avr/pgmspace.h>
 
 #define ROWS 6
 #define COLUMNS 14
@@ -46,7 +47,9 @@ struct room room_1
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-        {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
+    {
+      ' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '
+    }
   }
 };
 struct room room_2
@@ -57,6 +60,17 @@ struct room room_2
         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
         {'|', ' ', ' ', 'R', 'O', 'O', 'M', '2', ' ', ' ', ' ', ' ', ' ', ' '},
         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+        {' ', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', ' '},
+  }
+};
+struct room room_3
+{
+  {
+    {' ', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', ' '},
+        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+        {'|', ' ', ' ', 'R', 'O', 'O', 'M', '3', ' ', ' ', ' ', ' ', ' ', '|'},
+        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
         {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
   }
 };
@@ -65,6 +79,8 @@ void set_adjacent_rooms()
 {
   room_1.adjacent_rooms[DOOR_LEFT] = &room_2;
   room_2.adjacent_rooms[DOOR_RIGHT] = &room_1;
+  room_2.adjacent_rooms[DOOR_BOTTOM] = &room_3;
+  room_3.adjacent_rooms[DOOR_TOP] = &room_2;
 }
 
 room *curr_room = &room_1;
@@ -250,13 +266,23 @@ short SM_GAME_Tick(short state)
     switch (currInput)
     {
     case UP:
-      if (curr_room->room_layout[player.y - 1][player.x] != '-')
+      if (player.y == 0)
+      {
+        curr_room = curr_room->adjacent_rooms[DOOR_TOP];
+        player.y = ROWS;
+      }
+      if (curr_room->room_layout[player.y - 1][player.x] != '-' && curr_room->room_layout[player.y - 1][player.x] != '|')
       {
         player.y--;
       }
       break;
     case DOWN:
-      if (curr_room->room_layout[player.y + 1][player.x] != '-')
+      if (player.y == ROWS - 1)
+      {
+        curr_room = curr_room->adjacent_rooms[DOOR_BOTTOM];
+        player.y = 0;
+      }
+      else if (curr_room->room_layout[player.y + 1][player.x] != '-' && curr_room->room_layout[player.y + 1][player.x] != '|')
       {
         player.y++;
       }
@@ -267,7 +293,7 @@ short SM_GAME_Tick(short state)
         curr_room = curr_room->adjacent_rooms[DOOR_LEFT];
         player.x = COLUMNS - 1;
       }
-      else if (curr_room->room_layout[player.y][player.x - 1] != '|')
+      else if (curr_room->room_layout[player.y][player.x - 1] != '|' && curr_room->room_layout[player.y][player.x - 1] != '-')
       {
         player.x--;
       }
@@ -278,7 +304,7 @@ short SM_GAME_Tick(short state)
         curr_room = curr_room->adjacent_rooms[DOOR_RIGHT];
         player.x = 0;
       }
-      else if (curr_room->room_layout[player.y][player.x + 1] != '|')
+      else if (curr_room->room_layout[player.y][player.x + 1] != '|' && curr_room->room_layout[player.y][player.x + 1] != '-')
       {
         player.x++;
       }
@@ -341,7 +367,7 @@ void setup()
   nokiaScreen.setTextColor(BLACK);
 
   lcd.clear();
-  lcd.println("Hello, world!");
+  lcd.println(F("Hello, world!"));
 }
 
 void loop()
