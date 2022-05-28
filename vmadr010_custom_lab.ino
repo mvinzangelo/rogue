@@ -8,6 +8,7 @@
 
 #define ROWS 6
 #define COLUMNS 14
+#define NUMBER_OF_ROOMS 3
 
 // display variables
 const short rs = 8, en = 7, d4 = 6, d5 = 5, d6 = 4, d7 = 3;
@@ -32,58 +33,52 @@ enum DOOR_LOCATION
   DOOR_LEFT,
   DOOR_RIGHT
 };
+
 struct room
 {
   char room_layout[ROWS][COLUMNS];
-  room *adjacent_rooms[4];
+  short left_room_index;
+  short right_room_index;
+  short top_room_index;
+  short bottom_room_index;
+};
+
+const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
+    {{{' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
+      {'|', ' ', ' ', ' ', ' ', 'R', 'O', 'O', 'M', '1', ' ', ' ', ' ', '|'},
+      {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '}},
+     1,
+     0,
+     0,
+     0},
+    {{{' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+      {'|', ' ', ' ', 'R', 'O', 'O', 'M', '2', ' ', ' ', ' ', ' ', ' ', ' '},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {' ', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', ' '}},
+     0,
+     0,
+     0,
+     2},
+    {{{' ', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', ' '},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', 'R', 'O', 'O', 'M', '3', ' ', ' ', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+      {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '}},
+     0,
+     0,
+     1,
+     0},
 };
 
 // rooms
-struct room room_1
-{
-  {
-    {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
-        {'|', ' ', ' ', ' ', ' ', 'R', 'O', 'O', 'M', '1', ' ', ' ', ' ', '|'},
-        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-    {
-      ' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '
-    }
-  }
-};
-struct room room_2
-{
-  {
-    {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
-        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-        {'|', ' ', ' ', 'R', 'O', 'O', 'M', '2', ' ', ' ', ' ', ' ', ' ', ' '},
-        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-        {' ', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', ' '},
-  }
-};
-struct room room_3
-{
-  {
-    {' ', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', ' '},
-        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-        {'|', ' ', ' ', 'R', 'O', 'O', 'M', '3', ' ', ' ', ' ', ' ', ' ', '|'},
-        {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-        {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
-  }
-};
-
-void set_adjacent_rooms()
-{
-  room_1.adjacent_rooms[DOOR_LEFT] = &room_2;
-  room_2.adjacent_rooms[DOOR_RIGHT] = &room_1;
-  room_2.adjacent_rooms[DOOR_BOTTOM] = &room_3;
-  room_3.adjacent_rooms[DOOR_TOP] = &room_2;
-}
-
-room *curr_room = &room_1;
+int *curr_room_index = new int(0);
+char room_buffer[ROWS][COLUMNS];
 
 // game screen global struct
 struct game_screen
@@ -258,6 +253,7 @@ short SM_GAME_Tick(short state)
   switch (state)
   {
   case SM_GAME_OVERWORLD:
+    memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
     break;
   }
   switch (state)
@@ -268,10 +264,11 @@ short SM_GAME_Tick(short state)
     case UP:
       if (player.y == 0)
       {
-        curr_room = curr_room->adjacent_rooms[DOOR_TOP];
+        memcpy_P(curr_room_index, &game_map[*curr_room_index].top_room_index, sizeof(curr_room_index));
+        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.y = ROWS;
       }
-      if (curr_room->room_layout[player.y - 1][player.x] != '-' && curr_room->room_layout[player.y - 1][player.x] != '|')
+      if (room_buffer[player.y - 1][player.x] != '-' && room_buffer[player.y - 1][player.x] != '|')
       {
         player.y--;
       }
@@ -279,10 +276,11 @@ short SM_GAME_Tick(short state)
     case DOWN:
       if (player.y == ROWS - 1)
       {
-        curr_room = curr_room->adjacent_rooms[DOOR_BOTTOM];
+        memcpy_P(curr_room_index, &game_map[*curr_room_index].bottom_room_index, sizeof(curr_room_index));
+        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.y = 0;
       }
-      else if (curr_room->room_layout[player.y + 1][player.x] != '-' && curr_room->room_layout[player.y + 1][player.x] != '|')
+      else if (room_buffer[player.y + 1][player.x] != '-' && room_buffer[player.y + 1][player.x] != '|')
       {
         player.y++;
       }
@@ -290,10 +288,11 @@ short SM_GAME_Tick(short state)
     case LEFT:
       if (player.x == 0)
       {
-        curr_room = curr_room->adjacent_rooms[DOOR_LEFT];
+        memcpy_P(curr_room_index, &game_map[*curr_room_index].left_room_index, sizeof(curr_room_index));
+        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.x = COLUMNS - 1;
       }
-      else if (curr_room->room_layout[player.y][player.x - 1] != '|' && curr_room->room_layout[player.y][player.x - 1] != '-')
+      else if (room_buffer[player.y][player.x - 1] != '|' && room_buffer[player.y][player.x - 1] != '-')
       {
         player.x--;
       }
@@ -301,10 +300,11 @@ short SM_GAME_Tick(short state)
     case RIGHT:
       if (player.x == COLUMNS - 1)
       {
-        curr_room = curr_room->adjacent_rooms[DOOR_RIGHT];
+        memcpy_P(curr_room_index, &game_map[*curr_room_index].right_room_index, sizeof(curr_room_index));
+        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.x = 0;
       }
-      else if (curr_room->room_layout[player.y][player.x + 1] != '|' && curr_room->room_layout[player.y][player.x + 1] != '-')
+      else if (room_buffer[player.y][player.x + 1] != '|' && room_buffer[player.y][player.x + 1] != '-')
       {
         player.x++;
       }
@@ -313,7 +313,7 @@ short SM_GAME_Tick(short state)
       Serial.println(currInput);
       break;
     }
-    game_screen.copy_room_to_buffer(curr_room->room_layout);
+    game_screen.copy_room_to_buffer(room_buffer);
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
     nokiaScreen.clearDisplay();
     nokiaScreen.setCursor(0, 0);
@@ -339,8 +339,6 @@ task tasks[tasksNum];
 void setup()
 {
   Serial.begin(9600);
-
-  set_adjacent_rooms();
 
   // randomSeed(analogRead(0));
 
