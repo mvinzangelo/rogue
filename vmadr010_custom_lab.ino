@@ -365,7 +365,7 @@ void setup()
   nokiaScreen.setTextColor(BLACK);
 
   lcd.clear();
-  lcd.println(F("Hello, world!"));
+  lcd.print(F("hello world"));
 }
 
 void loop()
