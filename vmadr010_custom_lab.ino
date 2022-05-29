@@ -59,10 +59,14 @@ void player::print_player_info_on_lcd()
 
 struct enemy
 {
+  char enemy_name[10] = "goblin";
   short x = 1;
   short y = 1;
   char enemy_avatar = 'X';
   short move_tick_delay = __SHRT_MAX__;
+  short hp = 5;
+  short str = 1;
+  short xp_on_kill = 1;
   void move_towards_avatar();
 } enemy;
 short enemy_move_counter = 0;
