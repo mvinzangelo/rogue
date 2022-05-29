@@ -45,6 +45,22 @@ struct enemy
 
 void enemy::move_towards_avatar()
 {
+  if (player.y > y)
+  {
+    y++;
+  }
+  else if (player.y < y)
+  {
+    y--;
+  }
+  else if (player.x > x)
+  {
+    x++;
+  }
+  else if (player.x < x)
+  {
+    x--;
+  }
 }
 
 struct room
@@ -436,6 +452,7 @@ short SM_GAME_Tick(short state)
       Serial.println(currInput);
       break;
     }
+    enemy.move_towards_avatar();
     game_screen.copy_room_to_buffer(room_buffer);
     game_screen.game_screen_buffer[enemy.y][enemy.x] = enemy.enemy_avatar;
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
