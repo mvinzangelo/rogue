@@ -40,8 +40,10 @@ struct enemy
   short x = 1;
   short y = 1;
   char enemy_avatar = 'X';
+  short move_tick_delay = 5;
   void move_towards_avatar();
 } enemy;
+short enemy_move_counter = 0;
 
 void enemy::move_towards_avatar()
 {
@@ -53,7 +55,7 @@ void enemy::move_towards_avatar()
   {
     y--;
   }
-  else if (player.x > x)
+  if (player.x > x)
   {
     x++;
   }
@@ -452,7 +454,12 @@ short SM_GAME_Tick(short state)
       Serial.println(currInput);
       break;
     }
-    enemy.move_towards_avatar();
+    enemy_move_counter++;
+    if (enemy.move_tick_delay < enemy_move_counter)
+    {
+      enemy.move_towards_avatar();
+      enemy_move_counter = 0;
+    }
     game_screen.copy_room_to_buffer(room_buffer);
     game_screen.game_screen_buffer[enemy.y][enemy.x] = enemy.enemy_avatar;
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
