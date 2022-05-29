@@ -35,6 +35,13 @@ struct player
   char player_avatar = '@';
 } player;
 
+struct enemy
+{
+  short x = 1;
+  short y = 1;
+  char enemy_avatar = 'X';
+} enemy;
+
 struct room
 {
   char room_layout[ROWS][COLUMNS];
@@ -423,6 +430,7 @@ short SM_GAME_Tick(short state)
       break;
     }
     game_screen.copy_room_to_buffer(room_buffer);
+    game_screen.game_screen_buffer[enemy.y][enemy.x] = enemy.enemy_avatar;
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
     nokia_screen.clearDisplay();
     nokia_screen.setCursor(0, 0);
