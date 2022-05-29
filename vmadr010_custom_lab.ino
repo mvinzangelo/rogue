@@ -88,7 +88,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      7,
      9,
      0,
-     6},
+     0},
     // room 4
     {{{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -117,7 +117,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
       {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'}},
+      {'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'}},
      4,
      0,
      2,
@@ -190,11 +190,9 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      11},
 };
 
-// rooms
 int *curr_room_index = new int(0);
 char room_buffer[ROWS][COLUMNS];
 
-// game screen global struct
 struct game_screen
 {
   char game_screen_buffer[ROWS][COLUMNS];
@@ -227,11 +225,15 @@ struct game_screen
 
 // inputs variables
 
+#define joystickBtn 2
+#define xAxis_median 500
+#define yAxis_median 500
+
 const short xAxis = A0;
 const short yAxis = A1;
-const short joystickBtn = 2;
-const short xAxis_median = 500;
-const short yAxis_median = 500;
+// const short joystickBtn = 2;
+// const short xAxis_median = 500;
+// const short yAxis_median = 500;
 
 enum JOYSTICK_INPUT
 {
