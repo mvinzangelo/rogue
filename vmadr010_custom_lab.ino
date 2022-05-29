@@ -10,12 +10,23 @@
 #define COLUMNS 14
 #define NUMBER_OF_ROOMS 3
 
-// display variables
-const short rs = 8, en = 7, d4 = 6, d5 = 5, d6 = 4, d7 = 3;
-LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
+// lcd constants
+#define rs 8
+#define en 7
+#define d4 6
+#define d5 5
+#define d6 4
+#define d7 3
 
-const short clk = 9, din = 13, d_c = 12, ce = 10, rst = 11;
-Adafruit_PCD8544 nokiaScreen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
+// nokia constants
+#define clk 9
+#define din 13
+#define d_c 12
+#define ce 10
+#define rst 11
+
+LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
+Adafruit_PCD8544 nokia_screen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
 
 // struct player
 struct player
@@ -26,14 +37,6 @@ struct player
 } player;
 
 // room class
-enum DOOR_LOCATION
-{
-  DOOR_TOP,
-  DOOR_BOTTOM,
-  DOOR_LEFT,
-  DOOR_RIGHT
-};
-
 struct room
 {
   char room_layout[ROWS][COLUMNS];
@@ -45,7 +48,7 @@ struct room
 
 const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
     {{{' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
-      {'|', ' ', ' ', ' ', ' ', 'R', 'O', 'O', 'M', '1', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -57,7 +60,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
     {{{' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-      {'|', ' ', ' ', 'R', 'O', 'O', 'M', '2', ' ', ' ', ' ', ' ', ' ', ' '},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {' ', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', ' '}},
      0,
@@ -67,7 +70,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
     {{{' ', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', ' '},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'|', ' ', ' ', 'R', 'O', 'O', 'M', '3', ' ', ' ', ' ', ' ', ' ', '|'},
+      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
       {' ', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ' '}},
      0,
@@ -315,10 +318,10 @@ short SM_GAME_Tick(short state)
     }
     game_screen.copy_room_to_buffer(room_buffer);
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
-    nokiaScreen.clearDisplay();
-    nokiaScreen.setCursor(0, 0);
-    nokiaScreen.println(game_screen.get_screen_buffer().c_str());
-    nokiaScreen.display();
+    nokia_screen.clearDisplay();
+    nokia_screen.setCursor(0, 0);
+    nokia_screen.println(game_screen.get_screen_buffer().c_str());
+    nokia_screen.display();
     break;
   }
   return state;
@@ -357,12 +360,12 @@ void setup()
   lcd.begin(16, 2);
   pinMode(joystickBtn, INPUT_PULLUP);
 
-  nokiaScreen.setRotation(2);
-  nokiaScreen.begin();
-  nokiaScreen.setContrast(50);
-  nokiaScreen.clearDisplay();
-  nokiaScreen.setTextSize(1);
-  nokiaScreen.setTextColor(BLACK);
+  nokia_screen.setRotation(2);
+  nokia_screen.begin();
+  nokia_screen.setContrast(50);
+  nokia_screen.clearDisplay();
+  nokia_screen.setTextSize(1);
+  nokia_screen.setTextColor(BLACK);
 
   lcd.clear();
   lcd.print(F("hello world"));
