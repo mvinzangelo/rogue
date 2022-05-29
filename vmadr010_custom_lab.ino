@@ -28,7 +28,6 @@
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 Adafruit_PCD8544 nokia_screen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
 
-// struct player
 struct player
 {
   short x = 4;
@@ -36,7 +35,6 @@ struct player
   char player_avatar = '@';
 } player;
 
-// room class
 struct room
 {
   char room_layout[ROWS][COLUMNS];
@@ -384,7 +382,7 @@ short SM_GAME_Tick(short state)
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.y = ROWS;
       }
-      if (room_buffer[player.y - 1][player.x] != '-' && room_buffer[player.y - 1][player.x] != '|')
+      if (room_buffer[player.y - 1][player.x] == ' ')
       {
         player.y--;
       }
@@ -396,7 +394,7 @@ short SM_GAME_Tick(short state)
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.y = 0;
       }
-      else if (room_buffer[player.y + 1][player.x] != '-' && room_buffer[player.y + 1][player.x] != '|')
+      else if (room_buffer[player.y + 1][player.x] == ' ')
       {
         player.y++;
       }
@@ -408,7 +406,7 @@ short SM_GAME_Tick(short state)
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.x = COLUMNS - 1;
       }
-      else if (room_buffer[player.y][player.x - 1] != '|' && room_buffer[player.y][player.x - 1] != '-')
+      else if (room_buffer[player.y][player.x - 1] == ' ')
       {
         player.x--;
       }
@@ -420,7 +418,7 @@ short SM_GAME_Tick(short state)
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.x = 0;
       }
-      else if (room_buffer[player.y][player.x + 1] != '|' && room_buffer[player.y][player.x + 1] != '-')
+      else if (room_buffer[player.y][player.x + 1] == ' ')
       {
         player.x++;
       }
