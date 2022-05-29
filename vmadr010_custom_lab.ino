@@ -40,7 +40,12 @@ struct enemy
   short x = 1;
   short y = 1;
   char enemy_avatar = 'X';
+  void move_towards_avatar();
 } enemy;
+
+void enemy::move_towards_avatar()
+{
+}
 
 struct room
 {
@@ -203,32 +208,34 @@ char room_buffer[ROWS][COLUMNS];
 struct game_screen
 {
   char game_screen_buffer[ROWS][COLUMNS];
-  // methods
-  std::string get_screen_buffer()
-  {
-    std::string tmp;
-    short count = 0;
-    for (short i = 0; i < ROWS; i++)
-    {
-      for (short j = 0; j < COLUMNS; j++)
-      {
-        tmp.push_back(game_screen_buffer[i][j]);
-      }
-    }
-    return tmp;
-  }
-  void copy_room_to_buffer(char curr[ROWS][COLUMNS])
-  {
-    for (short i = 0; i < ROWS; i++)
-    {
-      for (short j = 0; j < COLUMNS; j++)
-      {
-        game_screen_buffer[i][j] = curr[i][j];
-      }
-    }
-    return;
-  }
+  std::string get_screen_buffer();
+  void copy_room_to_buffer(char curr[ROWS][COLUMNS]);
 } game_screen;
+
+std::string game_screen::get_screen_buffer()
+{
+  std::string tmp;
+  short count = 0;
+  for (short i = 0; i < ROWS; i++)
+  {
+    for (short j = 0; j < COLUMNS; j++)
+    {
+      tmp.push_back(game_screen_buffer[i][j]);
+    }
+  }
+  return tmp;
+}
+void game_screen::copy_room_to_buffer(char curr[ROWS][COLUMNS])
+{
+  for (short i = 0; i < ROWS; i++)
+  {
+    for (short j = 0; j < COLUMNS; j++)
+    {
+      game_screen_buffer[i][j] = curr[i][j];
+    }
+  }
+  return;
+}
 
 // inputs variables
 
@@ -384,7 +391,7 @@ short SM_GAME_Tick(short state)
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.y = ROWS;
       }
-      if (room_buffer[player.y - 1][player.x] == ' ')
+      if (game_screen.game_screen_buffer[player.y - 1][player.x] == ' ')
       {
         player.y--;
       }
@@ -396,7 +403,7 @@ short SM_GAME_Tick(short state)
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.y = 0;
       }
-      else if (room_buffer[player.y + 1][player.x] == ' ')
+      else if (game_screen.game_screen_buffer[player.y + 1][player.x] == ' ')
       {
         player.y++;
       }
@@ -408,7 +415,7 @@ short SM_GAME_Tick(short state)
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.x = COLUMNS - 1;
       }
-      else if (room_buffer[player.y][player.x - 1] == ' ')
+      else if (game_screen.game_screen_buffer[player.y][player.x - 1] == ' ')
       {
         player.x--;
       }
@@ -420,7 +427,7 @@ short SM_GAME_Tick(short state)
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
         player.x = 0;
       }
-      else if (room_buffer[player.y][player.x + 1] == ' ')
+      else if (game_screen.game_screen_buffer[player.y][player.x + 1] == ' ')
       {
         player.x++;
       }
