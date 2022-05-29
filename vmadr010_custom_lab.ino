@@ -62,7 +62,7 @@ struct enemy
   short x = 1;
   short y = 1;
   char enemy_avatar = 'X';
-  short move_tick_delay = 5;
+  short move_tick_delay = __SHRT_MAX__;
   void move_towards_avatar();
 } enemy;
 short enemy_move_counter = 0;
@@ -408,20 +408,34 @@ short SM_JOYSTICK_INPUT_Tick(short state)
 
 enum SM_GAME_STATES
 {
-  SM_GAME_OVERWORLD
+  SM_GAME_INIT,
+  SM_GAME_OVERWORLD,
+  SM_GAME_COMBAT
 };
 
 short SM_GAME_Tick(short state)
 {
   switch (state)
   {
-  case SM_GAME_OVERWORLD:
+  case SM_GAME_INIT:
     memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+    state = SM_GAME_OVERWORLD;
+    break;
+  case SM_GAME_OVERWORLD:
+    if (enemy.y == player.y && (enemy.x == player.x + 1 || enemy.x == player.x - 1))
+    {
+      state = SM_GAME_COMBAT;
+    }
+    else if (enemy.x == player.x && (enemy.y == player.y + 1 || enemy.y == player.y - 1))
+    {
+      state = SM_GAME_COMBAT;
+    }
     break;
   }
   switch (state)
   {
   case SM_GAME_OVERWORLD:
+    memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
     switch (currInput)
     {
     case UP:
@@ -490,6 +504,10 @@ short SM_GAME_Tick(short state)
     nokia_screen.println(game_screen.get_screen_buffer().c_str());
     nokia_screen.display();
     player.print_player_info_on_lcd();
+    break;
+  case SM_GAME_COMBAT:
+    lcd.clear();
+    lcd.print("IN COMBAT");
     break;
   }
   return state;
