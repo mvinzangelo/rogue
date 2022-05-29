@@ -231,9 +231,6 @@ struct game_screen
 
 const short xAxis = A0;
 const short yAxis = A1;
-// const short joystickBtn = 2;
-// const short xAxis_median = 500;
-// const short yAxis_median = 500;
 
 enum JOYSTICK_INPUT
 {
@@ -245,8 +242,6 @@ enum JOYSTICK_INPUT
 } input;
 
 static JOYSTICK_INPUT currInput = NEUTRAL;
-
-// input state machine
 
 enum SM_JOYSTICK_INPUT_States
 {
@@ -356,8 +351,6 @@ short SM_JOYSTICK_INPUT_Tick(short state)
 
   return state;
 }
-
-// screen state machine
 
 enum SM_GAME_STATES
 {
@@ -486,14 +479,13 @@ void setup()
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
   unsigned char i;
   for (i = 0; i < tasksNum; ++i)
   {
     if ((millis() - tasks[i].elapsedTime) >= tasks[i].period)
     {
       tasks[i].state = tasks[i].TickFct(tasks[i].state);
-      tasks[i].elapsedTime = millis(); // Last time this task was ran
+      tasks[i].elapsedTime = millis();
     }
   }
 }
