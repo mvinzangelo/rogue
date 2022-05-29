@@ -30,7 +30,7 @@ Adafruit_PCD8544 nokia_screen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
 
 struct player
 {
-  short x = 4;
+  short x = 6;
   short y = 3;
   char player_avatar = '@';
 } player;
