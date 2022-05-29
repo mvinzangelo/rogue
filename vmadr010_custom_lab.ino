@@ -26,6 +26,7 @@
 #define rst 11
 
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
+char lcd_buffer[18];
 Adafruit_PCD8544 nokia_screen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
 
 struct player
@@ -33,7 +34,28 @@ struct player
   short x = 6;
   short y = 3;
   char player_avatar = '@';
+  short lvl = 1;
+  short hp = 10;
+  short str = 1;
+  short xp = 0;
+  void print_player_info_on_lcd();
 } player;
+void player::print_player_info_on_lcd()
+{
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  sprintf(lcd_buffer, "lvl: %i", lvl);
+  lcd.print(lcd_buffer);
+  lcd.setCursor(0, 1);
+  sprintf(lcd_buffer, " hp: %i", hp);
+  lcd.print(lcd_buffer);
+  lcd.setCursor(8, 0);
+  sprintf(lcd_buffer, " xp: %i", xp);
+  lcd.print(lcd_buffer);
+  lcd.setCursor(7, 1);
+  sprintf(lcd_buffer, " str: %i", str);
+  lcd.print(lcd_buffer);
+}
 
 struct enemy
 {
@@ -467,6 +489,7 @@ short SM_GAME_Tick(short state)
     nokia_screen.setCursor(0, 0);
     nokia_screen.println(game_screen.get_screen_buffer().c_str());
     nokia_screen.display();
+    player.print_player_info_on_lcd();
     break;
   }
   return state;
@@ -511,9 +534,6 @@ void setup()
   nokia_screen.clearDisplay();
   nokia_screen.setTextSize(1);
   nokia_screen.setTextColor(BLACK);
-
-  lcd.clear();
-  lcd.print(F("hello world"));
 }
 
 void loop()
