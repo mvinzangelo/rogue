@@ -57,21 +57,24 @@ void player::print_player_info_on_lcd()
   lcd.print(lcd_buffer);
 }
 
-struct enemy
+#define NUMBER_OF_ENEMIES 21
+
+struct enemy_
 {
-  char enemy_name[10] = "goblin";
-  short x = 1;
-  short y = 1;
-  char enemy_avatar = 'X';
-  short move_tick_delay = __SHRT_MAX__;
-  short hp = 5;
-  short str = 1;
-  short xp_on_kill = 1;
+  char *enemy_name;
+  short x;
+  short y;
+  char enemy_avatar;
+  short move_tick_delay;
+  short hp;
+  short str;
+  short xp_on_kill;
+  short room_index;
   void move_towards_avatar();
-} enemy;
+};
 short enemy_move_counter = 0;
 
-void enemy::move_towards_avatar()
+void enemy_::move_towards_avatar()
 {
   if (player.y > y)
   {
@@ -90,6 +93,32 @@ void enemy::move_towards_avatar()
     x--;
   }
 }
+const enemy_ enemies[NUMBER_OF_ENEMIES] PROGMEM = {
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
+};
+
+enemy_ enemy{
+    "goblin", 1, 1, 'X', 5, 5, 1, 1, 0};
 
 struct room
 {
