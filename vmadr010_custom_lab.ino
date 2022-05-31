@@ -5,6 +5,7 @@
 #include <Adafruit_PCD8544.h>
 #include <LiquidCrystal.h>
 #include <avr/pgmspace.h>
+#include <EEPROM.h>
 
 #define ROWS 6
 #define COLUMNS 14
@@ -259,7 +260,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
         2,
         0,
         3,
-        {{"skeleton", 2, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skeleton", 6, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_HP}, {"skeleton", 8, 4, 'K', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_HP, SKELETON_XP}}},
+        {{"skeleton", 2, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skeleton", 6, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_HP}, {"skeleton", 8, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_HP, SKELETON_XP}}},
     // room 7
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
