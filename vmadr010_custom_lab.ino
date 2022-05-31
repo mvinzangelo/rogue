@@ -504,15 +504,20 @@ short SM_GAME_Tick(short state)
     state = SM_GAME_OVERWORLD;
     break;
   case SM_GAME_OVERWORLD:
-    // TODO: Fix enemies
-    // if (enemy.y == player.y && (enemy.x == player.x + 1 || enemy.x == player.x - 1))
-    // {
-    //   state = SM_GAME_COMBAT;
-    // }
-    // else if (enemy.x == player.x && (enemy.y == player.y + 1 || enemy.y == player.y - 1))
-    // {
-    //   state = SM_GAME_COMBAT;
-    // }
+    if (*num_of_enemies_buffer > 0)
+    {
+      for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+      {
+        if (enemies_in_room[i].y == player.y && (enemies_in_room[i].x == player.x + 1 || enemies_in_room[i].x == player.x - 1))
+        {
+          state = SM_GAME_COMBAT;
+        }
+        else if (enemies_in_room[i].x == player.x && (enemies_in_room[i].y == player.y + 1 || enemies_in_room[i].y == player.y - 1))
+        {
+          state = SM_GAME_COMBAT;
+        }
+      }
+    }
     break;
   }
   switch (state)
