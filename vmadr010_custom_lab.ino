@@ -509,8 +509,8 @@ enum SM_GAME_STATES
 void player_combat_turn()
 {
   lcd.setCursor(0, 0);
-  int dice_roll = random(7);
-  if (dice_roll == 6)
+  int player_dice_roll = random(6);
+  if (player_dice_roll == 5)
   {
     lcd.print(F("you hit"));
     enemies_in_room[current_enemy_index].hp -= player.str;
@@ -518,6 +518,23 @@ void player_combat_turn()
   else
   {
     lcd.print(F("you miss"));
+  }
+}
+
+void enemy_combat_turn()
+{
+  lcd.setCursor(0, 1);
+  int enemy_dice_roll = random(6);
+  if (enemy_dice_roll == 5)
+  {
+    sprintf(lcd_buffer, "the %s hits", enemies_in_room[current_enemy_index].enemy_name);
+    lcd.print(lcd_buffer);
+    player.hp -= enemies_in_room[current_enemy_index].str;
+  }
+  else
+  {
+    sprintf(lcd_buffer, "the %s miss", enemies_in_room[current_enemy_index].enemy_name);
+    lcd.print(lcd_buffer);
   }
 }
 
@@ -558,6 +575,7 @@ short SM_GAME_Tick(short state)
             current_enemy_index = i;
             lcd.clear();
             player_combat_turn();
+            enemy_combat_turn();
           }
           else if (enemies_in_room[i].x == player.x && (enemies_in_room[i].y == player.y + 1 || enemies_in_room[i].y == player.y - 1))
           {
@@ -565,6 +583,7 @@ short SM_GAME_Tick(short state)
             current_enemy_index = i;
             lcd.clear();
             player_combat_turn();
+            enemy_combat_turn();
           }
         }
       }
@@ -575,7 +594,7 @@ short SM_GAME_Tick(short state)
     {
       state = SM_GAME_DEATH;
     }
-    if (enemies_in_room[current_enemy_index].hp <= 0)
+    else if (enemies_in_room[current_enemy_index].hp <= 0)
     {
       state = SM_GAME_COMBAT_WIN;
     }
@@ -662,6 +681,7 @@ short SM_GAME_Tick(short state)
     {
       lcd.clear();
       player_combat_turn();
+      enemy_combat_turn();
       is_joystick_down = true;
     }
     if (digitalRead(joystickBtn))
