@@ -48,8 +48,8 @@ struct player
   char player_avatar = '@';
   uint8_t lvl = 1;
   uint8_t max_hp = 10;
-  uint8_t hp = 10;
-  uint8_t str = 1;
+  uint8_t hp = 99;  // orig: 10
+  uint8_t str = 99; // orig: 1
   uint8_t xp = 0;
   void print_player_info_on_lcd();
 } player;
@@ -192,7 +192,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      7,
      5,
      2,
-     {{"goblin", 1, 1, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}, {"goblin", 5, 2, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}}},
+     {{"goblin", 1, 1, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}, {"goblin", 5, 4, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}}},
     // room 2
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -205,7 +205,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      6,
      2,
-     {{"goblin", 6, 1, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}, {"goblin", 9, 2, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}}},
+     {{"goblin", 12, 2, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}, {"goblin", 11, 3, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}}},
     // room 3
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -217,7 +217,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      9,
      0,
      0,
-     0},
+     3,
+     {{"goblin", 1, 1, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}, {"goblin", 6, 1, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}, {"goblin", 11, 2, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}}},
     // room 4
     {{{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -229,31 +230,36 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      6,
      0,
      0,
-     0},
+     3,
+     {{"goblin", 2, 4, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}, {"goblin", 6, 3, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}, {"goblin", 10, 4, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}}},
     // room 5
-    {{{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'}},
-     0,
-     0,
-     1,
-     0,
-     0},
+    {
+        {{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
+         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+         {'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'}},
+        0,
+        0,
+        1,
+        0,
+        2,
+        {{"skeleton", 1, 1, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skeleton", 1, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}}},
     // room 6
-    {{{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
-      {'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'}},
-     4,
-     0,
-     2,
-     0,
-     0},
+    {
+        {{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
+         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+         {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
+         {'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'}},
+        4,
+        0,
+        2,
+        0,
+        3,
+        {{"skeleton", 2, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skeleton", 6, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_HP}, {"skeleton", 8, 4, 'K', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_HP, SKELETON_XP}}},
     // room 7
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -265,7 +271,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      3,
      0,
      1,
-     0},
+     1,
+     {{"skeleton", 5, 2, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}}},
     // room 8
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -277,7 +284,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      7,
      0,
      0,
-     0},
+     2,
+     {{"knight", 1, 1, 'K', KNIGHT_TICK_DELAY, KNIGHT_HP, KNIGHT_STR, KNIGHT_XP}, {"knight", 1, 4, 'K', KNIGHT_TICK_DELAY, KNIGHT_HP, KNIGHT_STR, KNIGHT_XP}}},
     // room 9
     {{{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -289,7 +297,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      10,
      0,
-     0},
+     2,
+     {{"knight", 12, 1, 'K', KNIGHT_TICK_DELAY, KNIGHT_HP, KNIGHT_STR, KNIGHT_XP}, {"knight", 11, 4, 'K', KNIGHT_TICK_DELAY, KNIGHT_HP, KNIGHT_STR, KNIGHT_XP}}},
     // room 10
     {{{'+', '-', '-', '-', '-', '+', ' ', ' ', '+', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -301,7 +310,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      11,
      9,
-     0},
+     1,
+     {{"dragon", 6, 1, 'D', DRAGON_TICK_DELAY, DRAGON_HP, DRAGON_STR, DRAGON_XP}}},
     // room 11
     {{{' ', ' ', ' ', ' ', ' ', '+', ' ', ' ', '+', ' ', ' ', ' ', ' ', ' '},
       {' ', ' ', ' ', ' ', ' ', '|', ' ', ' ', '|', ' ', ' ', ' ', ' ', ' '},
@@ -325,7 +335,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      0,
      11,
-     0},
+     1,
+     {{"king", 6, 1, '#', KING_TICK_DELAY, KING_HP, KING_STR, KING_XP}}},
 };
 
 void copy_enemies_to_buffer()
