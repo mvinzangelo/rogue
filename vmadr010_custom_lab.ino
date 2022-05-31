@@ -30,9 +30,9 @@
 #define ce 10
 #define rst 11
 
-int *curr_room_index = new int(0);
+uint8_t current_room_index = 0;
 char room_buffer[ROWS][COLUMNS];
-short *num_of_enemies_buffer = new short(0);
+uint8_t num_of_enemies_buffer = 0;
 uint8_t current_enemy_index = 0;
 bool is_joystick_down = false;
 bool cleared_rooms[NUMBER_OF_ROOMS] = {false};
@@ -116,7 +116,7 @@ short enemy_move_counter = 0;
 
 void enemy::move_towards_avatar()
 {
-  if (hp > 0 && !cleared_rooms[*curr_room_index])
+  if (hp > 0 && !cleared_rooms[current_room_index])
   {
     if (player.y > y)
     {
@@ -139,9 +139,9 @@ void enemy::move_towards_avatar()
 
 void move_enemies_toward_player()
 {
-  if (*num_of_enemies_buffer > 0)
+  if (num_of_enemies_buffer > 0)
   {
-    for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+    for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
     {
       if (enemies_in_room[i].move_tick_delay < enemies_in_room[i].move_tick_delay_counter)
       {
@@ -341,19 +341,19 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
 
 void copy_enemies_to_buffer()
 {
-  memcpy_P(num_of_enemies_buffer, &game_map[*curr_room_index].number_of_enemies, sizeof(num_of_enemies_buffer));
-  if (*num_of_enemies_buffer > 0)
+  num_of_enemies_buffer = pgm_read_word_near(&game_map[current_room_index].number_of_enemies);
+  if (num_of_enemies_buffer > 0)
   {
-    for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+    for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
     {
-      enemies_in_room[i].x = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].x);
-      enemies_in_room[i].y = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].y);
-      enemies_in_room[i].enemy_name = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].enemy_name);
-      enemies_in_room[i].enemy_avatar = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].enemy_avatar);
-      enemies_in_room[i].move_tick_delay = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].move_tick_delay);
-      enemies_in_room[i].hp = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].hp);
-      enemies_in_room[i].str = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].str);
-      enemies_in_room[i].xp_on_kill = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].xp_on_kill);
+      enemies_in_room[i].x = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].x);
+      enemies_in_room[i].y = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].y);
+      enemies_in_room[i].enemy_name = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].enemy_name);
+      enemies_in_room[i].enemy_avatar = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].enemy_avatar);
+      enemies_in_room[i].move_tick_delay = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].move_tick_delay);
+      enemies_in_room[i].hp = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].hp);
+      enemies_in_room[i].str = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].str);
+      enemies_in_room[i].xp_on_kill = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].xp_on_kill);
       enemies_in_room[i].move_tick_delay_counter = 0;
     }
   }
@@ -393,11 +393,11 @@ void game_screen::copy_room_to_buffer(char curr[ROWS][COLUMNS])
 
 void put_enemies_on_screen()
 {
-  if (*num_of_enemies_buffer > 0)
+  if (num_of_enemies_buffer > 0)
   {
-    for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+    for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
     {
-      if (enemies_in_room[i].hp > 0 && !cleared_rooms[*curr_room_index])
+      if (enemies_in_room[i].hp > 0 && !cleared_rooms[current_room_index])
       {
         game_screen.game_screen_buffer[enemies_in_room[i].y][enemies_in_room[i].x] = enemies_in_room[i].enemy_avatar;
       }
@@ -574,33 +574,44 @@ void enemy_combat_turn()
 void check_if_room_clear()
 {
   uint8_t cnt = 0;
-  for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+  for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
   {
     if (enemies_in_room[i].hp <= 0)
     {
       cnt++;
     }
   }
-  if (cnt == *num_of_enemies_buffer)
+  if (cnt == num_of_enemies_buffer)
   {
-    cleared_rooms[*curr_room_index] = true;
+    cleared_rooms[current_room_index] = true;
   }
 }
+
+// bool is_start_selected = true;
 
 short SM_GAME_Tick(short state)
 {
   switch (state)
   {
   case SM_GAME_MENU:
-    memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+    // if (is_start_selected && !analogRead(joystickBtn))
+    // {
+    //   memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
+    //   state = SM_GAME_OVERWORLD;
+    // }
+    // else
+    // {
+    //   state = SM_GAME_MENU;
+    // }
+    memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
     state = SM_GAME_OVERWORLD;
     break;
   case SM_GAME_OVERWORLD:
-    if (*num_of_enemies_buffer > 0)
+    if (num_of_enemies_buffer > 0)
     {
-      for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+      for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
       {
-        if (enemies_in_room[i].hp > 0 && !cleared_rooms[*curr_room_index])
+        if (enemies_in_room[i].hp > 0 && !cleared_rooms[current_room_index])
         {
           if (enemies_in_room[i].y == player.y && (enemies_in_room[i].x == player.x + 1 || enemies_in_room[i].x == player.x - 1))
           {
@@ -658,15 +669,17 @@ short SM_GAME_Tick(short state)
   }
   switch (state)
   {
+  case SM_GAME_MENU:
+    break;
   case SM_GAME_OVERWORLD:
-    memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+    memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
     switch (currInput)
     {
     case UP:
       if (player.y == 0)
       {
-        memcpy_P(curr_room_index, &game_map[*curr_room_index].top_room_index, sizeof(curr_room_index));
-        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        current_room_index = pgm_read_word_near(&game_map[current_room_index].top_room_index);
+        memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
         copy_enemies_to_buffer();
         player.y = ROWS;
       }
@@ -678,8 +691,8 @@ short SM_GAME_Tick(short state)
     case DOWN:
       if (player.y == ROWS - 1)
       {
-        memcpy_P(curr_room_index, &game_map[*curr_room_index].bottom_room_index, sizeof(curr_room_index));
-        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        current_room_index = pgm_read_word_near(&game_map[current_room_index].bottom_room_index);
+        memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
         copy_enemies_to_buffer();
         player.y = 0;
       }
@@ -691,8 +704,8 @@ short SM_GAME_Tick(short state)
     case LEFT:
       if (player.x == 0)
       {
-        memcpy_P(curr_room_index, &game_map[*curr_room_index].left_room_index, sizeof(curr_room_index));
-        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        current_room_index = pgm_read_word_near(&game_map[current_room_index].left_room_index);
+        memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
         copy_enemies_to_buffer();
         player.x = COLUMNS - 1;
       }
@@ -704,8 +717,8 @@ short SM_GAME_Tick(short state)
     case RIGHT:
       if (player.x == COLUMNS - 1)
       {
-        memcpy_P(curr_room_index, &game_map[*curr_room_index].right_room_index, sizeof(curr_room_index));
-        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        current_room_index = pgm_read_word_near(&game_map[current_room_index].right_room_index);
+        memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
         copy_enemies_to_buffer();
         player.x = 0;
       }
@@ -746,6 +759,7 @@ short SM_GAME_Tick(short state)
     lcd.setCursor(0, 1);
     lcd.print(enemies_in_room[current_enemy_index].enemy_name);
     check_if_room_clear();
+    break;
   }
   return state;
 }
@@ -774,7 +788,7 @@ void setup()
   tasks[i].elapsedTime = 0;
   tasks[i].TickFct = &SM_JOYSTICK_INPUT_Tick;
   i++;
-  tasks[i].state = SM_GAME_OVERWORLD;
+  tasks[i].state = SM_GAME_MENU;
   tasks[i].period = 200;
   tasks[i].elapsedTime = 0;
   tasks[i].TickFct = &SM_GAME_Tick;
