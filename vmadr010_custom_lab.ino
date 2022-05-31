@@ -30,6 +30,7 @@ char room_buffer[ROWS][COLUMNS];
 short *num_of_enemies_buffer = new short(0);
 uint8_t current_enemy_index = 0;
 bool is_joystick_down = false;
+bool cleared_rooms[NUMBER_OF_ROOMS] = {false};
 
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 char lcd_buffer[18];
@@ -88,7 +89,7 @@ short enemy_move_counter = 0;
 
 void enemy::move_towards_avatar()
 {
-  if (hp > 0)
+  if (hp > 0 && !cleared_rooms[*curr_room_index])
   {
     if (player.y > y)
     {
@@ -359,7 +360,7 @@ void put_enemies_on_screen()
   {
     for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
     {
-      if (enemies_in_room[i].hp > 0)
+      if (enemies_in_room[i].hp > 0 && !cleared_rooms[*curr_room_index])
       {
         game_screen.game_screen_buffer[enemies_in_room[i].y][enemies_in_room[i].x] = enemies_in_room[i].enemy_avatar;
       }
@@ -520,6 +521,22 @@ void player_combat_turn()
   }
 }
 
+void check_if_room_clear()
+{
+  uint8_t cnt = 0;
+  for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+  {
+    if (enemies_in_room[i].hp <= 0)
+    {
+      cnt++;
+    }
+  }
+  if (cnt == *num_of_enemies_buffer)
+  {
+    cleared_rooms[*curr_room_index] = true;
+  }
+}
+
 short SM_GAME_Tick(short state)
 {
   switch (state)
@@ -533,7 +550,7 @@ short SM_GAME_Tick(short state)
     {
       for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
       {
-        if (enemies_in_room[i].hp > 0)
+        if (enemies_in_room[i].hp > 0 && !cleared_rooms[*curr_room_index])
         {
           if (enemies_in_room[i].y == player.y && (enemies_in_room[i].x == player.x + 1 || enemies_in_room[i].x == player.x - 1))
           {
@@ -657,6 +674,7 @@ short SM_GAME_Tick(short state)
     lcd.print(F("you defeated the"));
     lcd.setCursor(0, 1);
     lcd.print(enemies_in_room[current_enemy_index].enemy_name);
+    check_if_room_clear();
   }
   return state;
 }
