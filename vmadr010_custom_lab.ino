@@ -587,24 +587,22 @@ void check_if_room_clear()
   }
 }
 
-// bool is_start_selected = true;
+bool is_start_selected = true;
 
 short SM_GAME_Tick(short state)
 {
   switch (state)
   {
   case SM_GAME_MENU:
-    // if (is_start_selected && !analogRead(joystickBtn))
-    // {
-    //   memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
-    //   state = SM_GAME_OVERWORLD;
-    // }
-    // else
-    // {
-    //   state = SM_GAME_MENU;
-    // }
-    memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
-    state = SM_GAME_OVERWORLD;
+    if (is_start_selected && !digitalRead(joystickBtn))
+    {
+      memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
+      state = SM_GAME_OVERWORLD;
+    }
+    else
+    {
+      state = SM_GAME_MENU;
+    }
     break;
   case SM_GAME_OVERWORLD:
     if (num_of_enemies_buffer > 0)
@@ -670,8 +668,40 @@ short SM_GAME_Tick(short state)
   switch (state)
   {
   case SM_GAME_MENU:
+    switch (currInput)
+    {
+    case UP:
+      is_start_selected = !is_start_selected;
+      break;
+    case DOWN:
+      is_start_selected = !is_start_selected;
+      break;
+    default:
+      break;
+    }
+    Serial.println(F("MENU"));
+    player.print_player_info_on_lcd();
+    nokia_screen.clearDisplay();
+    nokia_screen.setCursor(30, 5);
+    nokia_screen.println(F("ROGUE"));
+    if (is_start_selected)
+    {
+      nokia_screen.setCursor(0, 23);
+      nokia_screen.println(F("> start"));
+      nokia_screen.setCursor(0, 35);
+      nokia_screen.println(F("reset"));
+    }
+    else
+    {
+      nokia_screen.setCursor(0, 23);
+      nokia_screen.println(F("start"));
+      nokia_screen.setCursor(0, 35);
+      nokia_screen.println(F("> reset"));
+    }
+    nokia_screen.display();
     break;
   case SM_GAME_OVERWORLD:
+    Serial.println(F("OVERWORLD"));
     memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
     switch (currInput)
     {
