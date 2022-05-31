@@ -57,6 +57,11 @@ void player::print_player_info_on_lcd()
   lcd.print(lcd_buffer);
 }
 
+#define GOBLIN_HP 2
+#define GOBLIN_STR 1
+#define GOBLIN_XP 2
+#define GOBLIN_TICK_DELAY 5
+
 struct enemy_
 {
   char *enemy_name;
@@ -72,18 +77,19 @@ struct enemy_
 
 struct enemy_buffer
 {
-  char *enemy_name_buffer;
-  short *x_buffer;
-  short *y_buffer;
-  char *enemy_avatar_buffer;
-  short *move_tick_delay_buffer;
-  short *hp_buffer;
-  short *str_buffer;
-  short xp_on_kill_buffer;
+  char *enemy_name_buffer = new char('?');
+  short *x_buffer = new short(0);
+  short *y_buffer = new short(0);
+  char *enemy_avatar_buffer = new char('!');
+  short *move_tick_delay_buffer = new short(0);
+  short *hp_buffer = new short(0);
+  short *str_buffer = new short(0);
+  short *xp_on_kill_buffer = new short(0);
+  short *tick_delay_counter = 0;
   void buffer_move_towards_avatar();
 };
 
-enemy_buffer enemies_in_room[3];
+enemy_buffer enemies_in_room[2];
 
 short enemy_move_counter = 0;
 
@@ -106,9 +112,6 @@ void enemy_::move_towards_avatar()
     x--;
   }
 }
-
-// enemy_ enemy{
-//     "goblin", 1, 1, 'X', 5, 5, 1, 1};
 
 struct room
 {
@@ -133,7 +136,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      2,
      3,
      4,
-     1},
+     0},
     // room 1
     {{{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -146,7 +149,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      7,
      5,
      2,
-     {{"goblin", 1, 1, 'X', __SHRT_MAX__, 5, 1, 1}, {"goblin", 5, 2, 'G', __SHRT_MAX__, 5, 1, 1}}},
+     {{"goblin", 1, 1, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}, {"goblin", 5, 2, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}}},
     // room 2
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -158,7 +161,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      0,
      6,
-     0},
+     2,
+     {{"goblin", 6, 1, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}, {"goblin", 9, 2, 'G', GOBLIN_TICK_DELAY, GOBLIN_HP, GOBLIN_STR, GOBLIN_XP}}},
     // room 3
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -284,11 +288,18 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
 int *curr_room_index = new int(0);
 char room_buffer[ROWS][COLUMNS];
 
-short *num_buf = new short(0);
+short *num_of_enemies_buffer = new short(0);
+short *temp_x_buf = new short(0);
 void copy_enemies_to_buffer()
 {
-  memcpy_P(num_buf, &game_map[*curr_room_index].number_of_enemies, sizeof(num_buf));
-  Serial.println(*num_buf);
+  memcpy_P(num_of_enemies_buffer, &game_map[*curr_room_index].number_of_enemies, sizeof(num_of_enemies_buffer));
+  if (*num_of_enemies_buffer > 0)
+  {
+    for (short i = 0; i < *num_of_enemies_buffer; i++)
+    {
+      memcpy_P(enemies_in_room[i].x_buffer, &game_map[*curr_room_index].room_enemies[i].x, sizeof(enemies_in_room[i].x_buffer));
+    }
+  }
 }
 
 struct game_screen
