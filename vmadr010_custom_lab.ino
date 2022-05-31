@@ -282,11 +282,18 @@ void copy_enemies_to_buffer()
   memcpy_P(num_of_enemies_buffer, &game_map[*curr_room_index].number_of_enemies, sizeof(num_of_enemies_buffer));
   if (*num_of_enemies_buffer > 0)
   {
-    for (short i = 0; i < *num_of_enemies_buffer; i++)
+    for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
     {
-      // memcpy_P(enemies_in_room[i].x_buffer, &game_map[*curr_room_index].room_enemies[i].x, sizeof(enemies_in_room[i].x_buffer));
       enemies_in_room[i].x = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].x);
-      Serial.println(enemies_in_room[i].x);
+      enemies_in_room[i].y = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].y);
+      enemies_in_room[i].enemy_name = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].enemy_name);
+      enemies_in_room[i].enemy_avatar = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].enemy_avatar);
+      enemies_in_room[i].move_tick_delay = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].move_tick_delay);
+      enemies_in_room[i].hp = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].hp);
+      enemies_in_room[i].str = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].str);
+      enemies_in_room[i].xp_on_kill = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].xp_on_kill);
+      enemies_in_room[i].move_tick_delay_counter = 0;
+      Serial.println(enemies_in_room[i].enemy_name);
     }
   }
 }
@@ -321,6 +328,17 @@ void game_screen::copy_room_to_buffer(char curr[ROWS][COLUMNS])
     }
   }
   return;
+}
+
+void render_enemies_on_screen()
+{
+  if (*num_of_enemies_buffer > 0)
+  {
+    for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+    {
+      game_screen.game_screen_buffer[enemies_in_room[i].y][enemies_in_room[i].x] = enemies_in_room[i].enemy_avatar;
+    }
+  }
 }
 
 // inputs variables
@@ -538,7 +556,6 @@ short SM_GAME_Tick(short state)
       }
       break;
     default:
-      // Serial.println(currInput);
       break;
     }
     // TODO: Fix enemeies
@@ -561,6 +578,7 @@ short SM_GAME_Tick(short state)
     // }
     game_screen.copy_room_to_buffer(room_buffer);
     // game_screen.game_screen_buffer[enemy.y][enemy.x] = enemy.enemy_avatar;
+    render_enemies_on_screen();
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
     nokia_screen.clearDisplay();
     nokia_screen.setCursor(0, 0);
