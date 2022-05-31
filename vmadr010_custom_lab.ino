@@ -88,21 +88,24 @@ short enemy_move_counter = 0;
 
 void enemy::move_towards_avatar()
 {
-  if (player.y > y)
+  if (hp > 0)
   {
-    y++;
-  }
-  else if (player.y < y)
-  {
-    y--;
-  }
-  if (player.x > x)
-  {
-    x++;
-  }
-  else if (player.x < x)
-  {
-    x--;
+    if (player.y > y)
+    {
+      y++;
+    }
+    else if (player.y < y)
+    {
+      y--;
+    }
+    if (player.x > x)
+    {
+      x++;
+    }
+    else if (player.x < x)
+    {
+      x--;
+    }
   }
 }
 
@@ -356,7 +359,10 @@ void put_enemies_on_screen()
   {
     for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
     {
-      game_screen.game_screen_buffer[enemies_in_room[i].y][enemies_in_room[i].x] = enemies_in_room[i].enemy_avatar;
+      if (enemies_in_room[i].hp > 0)
+      {
+        game_screen.game_screen_buffer[enemies_in_room[i].y][enemies_in_room[i].x] = enemies_in_room[i].enemy_avatar;
+      }
     }
   }
 }
@@ -527,19 +533,22 @@ short SM_GAME_Tick(short state)
     {
       for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
       {
-        if (enemies_in_room[i].y == player.y && (enemies_in_room[i].x == player.x + 1 || enemies_in_room[i].x == player.x - 1))
+        if (enemies_in_room[i].hp > 0)
         {
-          state = SM_GAME_COMBAT;
-          current_enemy_index = i;
-          lcd.clear();
-          player_combat_turn();
-        }
-        else if (enemies_in_room[i].x == player.x && (enemies_in_room[i].y == player.y + 1 || enemies_in_room[i].y == player.y - 1))
-        {
-          state = SM_GAME_COMBAT;
-          current_enemy_index = i;
-          lcd.clear();
-          player_combat_turn();
+          if (enemies_in_room[i].y == player.y && (enemies_in_room[i].x == player.x + 1 || enemies_in_room[i].x == player.x - 1))
+          {
+            state = SM_GAME_COMBAT;
+            current_enemy_index = i;
+            lcd.clear();
+            player_combat_turn();
+          }
+          else if (enemies_in_room[i].x == player.x && (enemies_in_room[i].y == player.y + 1 || enemies_in_room[i].y == player.y - 1))
+          {
+            state = SM_GAME_COMBAT;
+            current_enemy_index = i;
+            lcd.clear();
+            player_combat_turn();
+          }
         }
       }
     }
@@ -552,6 +561,12 @@ short SM_GAME_Tick(short state)
     if (enemies_in_room[current_enemy_index].hp <= 0)
     {
       state = SM_GAME_COMBAT_WIN;
+    }
+    break;
+  case SM_GAME_COMBAT_WIN:
+    if (!digitalRead(joystickBtn))
+    {
+      state = SM_GAME_OVERWORLD;
     }
   }
   switch (state)
