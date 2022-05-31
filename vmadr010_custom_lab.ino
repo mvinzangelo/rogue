@@ -48,9 +48,9 @@ struct player
   uint8_t y = 3;
   char player_avatar = '@';
   uint8_t lvl = 1;
-  uint8_t max_hp = 10;
-  uint8_t hp = 99;  // orig: 10
-  uint8_t str = 99; // orig: 1
+  uint8_t max_hp = 10; // orig: 10
+  uint8_t hp = 10;     // orig: 10
+  uint8_t str = 1;     // orig: 1
   uint8_t xp = 0;
   void print_player_info_on_lcd();
 } player;
@@ -532,6 +532,7 @@ short SM_JOYSTICK_INPUT_Tick(short state)
 
 enum SM_GAME_STATES
 {
+  SM_GAME_INIT,
   SM_GAME_MENU,
   SM_GAME_OVERWORLD,
   SM_GAME_COMBAT,
@@ -588,12 +589,31 @@ void check_if_room_clear()
   }
 }
 
+void read_player_stats_from_eeprom()
+{
+  player.lvl = EEPROM.read(0);
+  player.max_hp = EEPROM.read(1);
+  player.str = EEPROM.read(2);
+  player.xp = EEPROM.read(3);
+}
+
+void save_player_stats_from_eeprom()
+{
+  EEPROM.update(0, player.lvl);
+  EEPROM.update(1, player.max_hp);
+  EEPROM.update(2, player.str);
+  EEPROM.update(3, player.xp);
+}
+
 bool is_start_selected = true;
 
 short SM_GAME_Tick(short state)
 {
   switch (state)
   {
+  case SM_GAME_INIT:
+    read_player_stats_from_eeprom();
+    state = SM_GAME_MENU;
   case SM_GAME_MENU:
     if (is_start_selected && !digitalRead(joystickBtn))
     {
@@ -663,7 +683,15 @@ short SM_GAME_Tick(short state)
           player.xp = 0;
         }
       }
-      state = SM_GAME_OVERWORLD;
+      check_if_room_clear();
+      if (cleared_rooms[NUMBER_OF_ROOMS - 1])
+      {
+        state = SM_GAME_VICTORY;
+      }
+      else
+      {
+        state = SM_GAME_OVERWORLD;
+      }
     }
   }
   switch (state)
@@ -789,7 +817,6 @@ short SM_GAME_Tick(short state)
     lcd.print(F("you defeated the"));
     lcd.setCursor(0, 1);
     lcd.print(enemies_in_room[current_enemy_index].enemy_name);
-    check_if_room_clear();
     break;
   }
   return state;
