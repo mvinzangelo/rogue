@@ -47,11 +47,11 @@ struct player
   uint8_t x = 6;
   uint8_t y = 3;
   char player_avatar = '@';
-  uint8_t lvl = 1;
-  uint8_t max_hp = 10; // orig: 10
-  uint8_t hp = 10;     // orig: 10
-  uint8_t str = 1;     // orig: 1
-  uint8_t xp = 0;
+  uint8_t lvl;
+  uint8_t max_hp; // orig: 10
+  uint8_t hp;     // orig: 10
+  uint8_t str;    // orig: 1
+  uint8_t xp;
   void print_player_info_on_lcd();
 } player;
 void player::print_player_info_on_lcd()
@@ -595,6 +595,7 @@ void read_player_stats_from_eeprom()
   player.max_hp = EEPROM.read(1);
   player.str = EEPROM.read(2);
   player.xp = EEPROM.read(3);
+  player.hp = player.max_hp;
 }
 
 void save_player_stats_from_eeprom()
@@ -605,6 +606,15 @@ void save_player_stats_from_eeprom()
   EEPROM.update(3, player.xp);
 }
 
+void reset_player_stats_on_eeprom()
+{
+  EEPROM.write(0, 1);
+  EEPROM.write(1, 10);
+  EEPROM.write(2, 1);
+  EEPROM.write(3, 0);
+  player.hp = player.max_hp;
+}
+
 bool is_start_selected = true;
 
 short SM_GAME_Tick(short state)
@@ -612,13 +622,17 @@ short SM_GAME_Tick(short state)
   switch (state)
   {
   case SM_GAME_INIT:
-    read_player_stats_from_eeprom();
     state = SM_GAME_MENU;
   case SM_GAME_MENU:
+    Serial.println(player.lvl);
     if (is_start_selected && !digitalRead(joystickBtn))
     {
       memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
       state = SM_GAME_OVERWORLD;
+    }
+    else if (!is_start_selected && !digitalRead(joystickBtn))
+    {
+      reset_player_stats_on_eeprom();
     }
     else
     {
@@ -653,7 +667,6 @@ short SM_GAME_Tick(short state)
     }
     break;
   case SM_GAME_COMBAT:
-    Serial.println(enemies_in_room[current_enemy_index].hp);
     if (player.hp <= 0)
     {
       state = SM_GAME_DEATH;
@@ -708,7 +721,6 @@ short SM_GAME_Tick(short state)
     default:
       break;
     }
-    Serial.println(F("MENU"));
     player.print_player_info_on_lcd();
     nokia_screen.clearDisplay();
     nokia_screen.setCursor(30, 5);
@@ -730,7 +742,6 @@ short SM_GAME_Tick(short state)
     nokia_screen.display();
     break;
   case SM_GAME_OVERWORLD:
-    Serial.println(F("OVERWORLD"));
     memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
     switch (currInput)
     {
@@ -861,6 +872,9 @@ void setup()
   nokia_screen.clearDisplay();
   nokia_screen.setTextSize(1);
   nokia_screen.setTextColor(BLACK);
+
+  reset_player_stats_on_eeprom();
+  read_player_stats_from_eeprom();
 }
 
 void loop()
