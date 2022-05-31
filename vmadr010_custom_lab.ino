@@ -531,10 +531,11 @@ short SM_JOYSTICK_INPUT_Tick(short state)
 
 enum SM_GAME_STATES
 {
-  SM_GAME_INIT,
+  SM_GAME_MENU,
   SM_GAME_OVERWORLD,
   SM_GAME_COMBAT,
   SM_GAME_COMBAT_WIN,
+  SM_GAME_VICTORY,
   SM_GAME_DEATH
 };
 
@@ -590,7 +591,7 @@ short SM_GAME_Tick(short state)
 {
   switch (state)
   {
-  case SM_GAME_INIT:
+  case SM_GAME_MENU:
     memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
     state = SM_GAME_OVERWORLD;
     break;
