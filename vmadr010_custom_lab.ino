@@ -25,6 +25,10 @@
 #define ce 10
 #define rst 11
 
+int *curr_room_index = new int(0);
+char room_buffer[ROWS][COLUMNS];
+short *num_of_enemies_buffer = new short(0);
+
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 char lcd_buffer[18];
 Adafruit_PCD8544 nokia_screen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
@@ -97,6 +101,25 @@ void enemy::move_towards_avatar()
   else if (player.x < x)
   {
     x--;
+  }
+}
+
+void move_enemies_toward_player()
+{
+  if (*num_of_enemies_buffer > 0)
+  {
+    for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+    {
+      if (enemies_in_room[i].move_tick_delay < enemies_in_room[i].move_tick_delay_counter)
+      {
+        enemies_in_room[i].move_towards_avatar();
+        enemies_in_room[i].move_tick_delay_counter = 0;
+      }
+      else
+      {
+        enemies_in_room[i].move_tick_delay_counter++;
+      }
+    }
   }
 }
 
@@ -272,11 +295,6 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0},
 };
 
-int *curr_room_index = new int(0);
-char room_buffer[ROWS][COLUMNS];
-
-short *num_of_enemies_buffer = new short(0);
-short *temp_x_buf = new short(0);
 void copy_enemies_to_buffer()
 {
   memcpy_P(num_of_enemies_buffer, &game_map[*curr_room_index].number_of_enemies, sizeof(num_of_enemies_buffer));
@@ -330,7 +348,7 @@ void game_screen::copy_room_to_buffer(char curr[ROWS][COLUMNS])
   return;
 }
 
-void render_enemies_on_screen()
+void put_enemies_on_screen()
 {
   if (*num_of_enemies_buffer > 0)
   {
@@ -558,13 +576,13 @@ short SM_GAME_Tick(short state)
     default:
       break;
     }
-    // TODO: Fix enemeies
     // enemy_move_counter++;
     // if (enemy.move_tick_delay < enemy_move_counter)
     // {
     //   enemy.move_towards_avatar();
     //   enemy_move_counter = 0;
     // }
+    move_enemies_toward_player();
 
     // TODO: Show enemies on certain stages
     // if (game_map[*curr_room_index].number_of_enemies > 0)
@@ -578,7 +596,7 @@ short SM_GAME_Tick(short state)
     // }
     game_screen.copy_room_to_buffer(room_buffer);
     // game_screen.game_screen_buffer[enemy.y][enemy.x] = enemy.enemy_avatar;
-    render_enemies_on_screen();
+    put_enemies_on_screen();
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
     nokia_screen.clearDisplay();
     nokia_screen.setCursor(0, 0);
