@@ -31,13 +31,13 @@ Adafruit_PCD8544 nokia_screen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
 
 struct player
 {
-  short x = 6;
-  short y = 3;
+  uint8_t x = 6;
+  uint8_t y = 3;
   char player_avatar = '@';
-  short lvl = 1;
-  short hp = 10;
-  short str = 1;
-  short xp = 0;
+  uint8_t lvl = 1;
+  uint8_t hp = 10;
+  uint8_t str = 1;
+  uint8_t xp = 0;
   void print_player_info_on_lcd();
 } player;
 void player::print_player_info_on_lcd()
@@ -62,38 +62,25 @@ void player::print_player_info_on_lcd()
 #define GOBLIN_XP 2
 #define GOBLIN_TICK_DELAY 5
 
-struct enemy_
+struct enemy
 {
   char *enemy_name;
-  short x;
-  short y;
+  uint8_t x;
+  uint8_t y;
   char enemy_avatar;
-  short move_tick_delay;
-  short hp;
-  short str;
-  short xp_on_kill;
+  uint8_t move_tick_delay;
+  uint8_t hp;
+  uint8_t str;
+  uint8_t xp_on_kill;
+  uint8_t move_tick_delay_counter;
   void move_towards_avatar();
 };
 
-struct enemy_buffer
-{
-  char *enemy_name_buffer = new char('?');
-  short *x_buffer = new short(0);
-  short *y_buffer = new short(0);
-  char *enemy_avatar_buffer = new char('!');
-  short *move_tick_delay_buffer = new short(0);
-  short *hp_buffer = new short(0);
-  short *str_buffer = new short(0);
-  short *xp_on_kill_buffer = new short(0);
-  short *tick_delay_counter = 0;
-  void buffer_move_towards_avatar();
-};
-
-enemy_buffer enemies_in_room[2];
+enemy enemies_in_room[3];
 
 short enemy_move_counter = 0;
 
-void enemy_::move_towards_avatar()
+void enemy::move_towards_avatar()
 {
   if (player.y > y)
   {
@@ -121,7 +108,7 @@ struct room
   short top_room_index;
   short bottom_room_index;
   short number_of_enemies;
-  enemy_ room_enemies[3];
+  enemy room_enemies[3];
 };
 
 const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
@@ -297,7 +284,9 @@ void copy_enemies_to_buffer()
   {
     for (short i = 0; i < *num_of_enemies_buffer; i++)
     {
-      memcpy_P(enemies_in_room[i].x_buffer, &game_map[*curr_room_index].room_enemies[i].x, sizeof(enemies_in_room[i].x_buffer));
+      // memcpy_P(enemies_in_room[i].x_buffer, &game_map[*curr_room_index].room_enemies[i].x, sizeof(enemies_in_room[i].x_buffer));
+      enemies_in_room[i].x = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].x);
+      Serial.println(enemies_in_room[i].x);
     }
   }
 }
@@ -493,7 +482,6 @@ short SM_GAME_Tick(short state)
   switch (state)
   {
   case SM_GAME_OVERWORLD:
-    // Serial.print(*curr_room_index);
     memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
     switch (currInput)
     {
