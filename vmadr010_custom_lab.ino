@@ -633,6 +633,7 @@ short SM_GAME_Tick(short state)
     else if (!is_start_selected && !digitalRead(joystickBtn))
     {
       reset_player_stats_on_eeprom();
+      read_player_stats_from_eeprom();
     }
     else
     {
@@ -873,7 +874,7 @@ void setup()
   nokia_screen.setTextSize(1);
   nokia_screen.setTextColor(BLACK);
 
-  reset_player_stats_on_eeprom();
+  // reset_player_stats_on_eeprom();
   read_player_stats_from_eeprom();
 }
 
