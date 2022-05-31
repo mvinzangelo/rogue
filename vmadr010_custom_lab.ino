@@ -10,6 +10,11 @@
 #define COLUMNS 14
 #define NUMBER_OF_ROOMS 13
 
+// player scaling constants
+#define STR_INC_ON_LVL_UP 2
+#define HP_INC_ON_LVL_UP 5
+#define XP_THRESHOLD 10
+
 // lcd constants
 #define rs 8
 #define en 7
@@ -42,6 +47,7 @@ struct player
   uint8_t y = 3;
   char player_avatar = '@';
   uint8_t lvl = 1;
+  uint8_t max_hp = 10;
   uint8_t hp = 10;
   uint8_t str = 1;
   uint8_t xp = 0;
@@ -64,9 +70,10 @@ void player::print_player_info_on_lcd()
   lcd.print(lcd_buffer);
 }
 
+// enemy constants
 #define GOBLIN_HP 2
 #define GOBLIN_STR 1
-#define GOBLIN_XP 2
+#define GOBLIN_XP 12
 #define GOBLIN_TICK_DELAY 5
 
 struct enemy
@@ -76,7 +83,7 @@ struct enemy
   uint8_t y;
   char enemy_avatar;
   uint8_t move_tick_delay;
-  uint8_t hp;
+  int8_t hp;
   uint8_t str;
   uint8_t xp_on_kill;
   uint8_t move_tick_delay_counter;
@@ -317,7 +324,6 @@ void copy_enemies_to_buffer()
       enemies_in_room[i].str = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].str);
       enemies_in_room[i].xp_on_kill = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].xp_on_kill);
       enemies_in_room[i].move_tick_delay_counter = 0;
-      Serial.println(enemies_in_room[i].enemy_name);
     }
   }
 }
@@ -474,23 +480,18 @@ short SM_JOYSTICK_INPUT_Tick(short state)
     break;
   case SM_JOYSTICK_INPUT_NEUTRAL:
     currInput = NEUTRAL;
-    // Serial.println("NEUTRAL");
     break;
   case SM_JOYSTICK_INPUT_LEFT:
     currInput = LEFT;
-    // Serial.println("LEFT");
     break;
   case SM_JOYSTICK_INPUT_RIGHT:
     currInput = RIGHT;
-    // Serial.println("RIGHT");
     break;
   case SM_JOYSTICK_INPUT_UP:
     currInput = UP;
-    // Serial.println("UP");
     break;
   case SM_JOYSTICK_INPUT_DOWN:
     currInput = DOWN;
-    // Serial.println("DOWN");
     break;
   }
 
@@ -590,6 +591,7 @@ short SM_GAME_Tick(short state)
     }
     break;
   case SM_GAME_COMBAT:
+    Serial.println(enemies_in_room[current_enemy_index].hp);
     if (player.hp <= 0)
     {
       state = SM_GAME_DEATH;
@@ -602,6 +604,23 @@ short SM_GAME_Tick(short state)
   case SM_GAME_COMBAT_WIN:
     if (!digitalRead(joystickBtn))
     {
+      player.xp += enemies_in_room[current_enemy_index].xp_on_kill;
+      if (player.xp >= XP_THRESHOLD)
+      {
+        player.lvl++;
+        player.str += STR_INC_ON_LVL_UP;
+        player.max_hp += HP_INC_ON_LVL_UP;
+        player.hp = player.max_hp;
+        if (player.xp > XP_THRESHOLD)
+        {
+          uint8_t overflow = player.xp % XP_THRESHOLD;
+          player.xp = overflow;
+        }
+        else
+        {
+          player.xp = 0;
+        }
+      }
       state = SM_GAME_OVERWORLD;
     }
   }
