@@ -57,8 +57,6 @@ void player::print_player_info_on_lcd()
   lcd.print(lcd_buffer);
 }
 
-#define NUMBER_OF_ENEMIES 21
-
 struct enemy_
 {
   char *enemy_name;
@@ -69,9 +67,24 @@ struct enemy_
   short hp;
   short str;
   short xp_on_kill;
-  short room_index;
   void move_towards_avatar();
 };
+
+struct enemy_buffer
+{
+  char *enemy_name_buffer;
+  short *x_buffer;
+  short *y_buffer;
+  char *enemy_avatar_buffer;
+  short *move_tick_delay_buffer;
+  short *hp_buffer;
+  short *str_buffer;
+  short xp_on_kill_buffer;
+  void buffer_move_towards_avatar();
+};
+
+enemy_buffer enemies_in_room[3];
+
 short enemy_move_counter = 0;
 
 void enemy_::move_towards_avatar()
@@ -93,32 +106,9 @@ void enemy_::move_towards_avatar()
     x--;
   }
 }
-const enemy_ enemies[NUMBER_OF_ENEMIES] PROGMEM = {
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-    {"goblin", 1, 1, 'x', __SHRT_MAX__, 5, 1, 1, 0},
-};
 
-enemy_ enemy{
-    "goblin", 1, 1, 'X', 5, 5, 1, 1, 0};
+// enemy_ enemy{
+//     "goblin", 1, 1, 'X', 5, 5, 1, 1};
 
 struct room
 {
@@ -127,6 +117,8 @@ struct room
   short right_room_index;
   short top_room_index;
   short bottom_room_index;
+  short number_of_enemies;
+  enemy_ room_enemies[3];
 };
 
 const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
@@ -140,7 +132,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      1,
      2,
      3,
-     4},
+     4,
+     1},
     // room 1
     {{{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -151,7 +144,9 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      0,
      7,
-     5},
+     5,
+     2,
+     {{"goblin", 1, 1, 'X', __SHRT_MAX__, 5, 1, 1}, {"goblin", 5, 2, 'G', __SHRT_MAX__, 5, 1, 1}}},
     // room 2
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -162,7 +157,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      0,
      0,
-     6},
+     6,
+     0},
     // room 3
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -172,6 +168,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
       {'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'}},
      7,
      9,
+     0,
      0,
      0},
     // room 4
@@ -184,6 +181,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      6,
      0,
+     0,
      0},
     // room 5
     {{{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
@@ -195,6 +193,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      0,
      1,
+     0,
      0},
     // room 6
     {{{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
@@ -206,6 +205,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      4,
      0,
      2,
+     0,
      0},
     // room 7
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
@@ -217,7 +217,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      8,
      3,
      0,
-     1},
+     1,
+     0},
     // room 8
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -227,6 +228,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
       {'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'}},
      0,
      7,
+     0,
      0,
      0},
     // room 9
@@ -239,6 +241,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      3,
      0,
      10,
+     0,
      0},
     // room 10
     {{{'+', '-', '-', '-', '-', '+', ' ', ' ', '+', '-', '-', '-', '-', '+'},
@@ -250,7 +253,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      0,
      11,
-     9},
+     9,
+     0},
     // room 11
     {{{' ', ' ', ' ', ' ', ' ', '+', ' ', ' ', '+', ' ', ' ', ' ', ' ', ' '},
       {' ', ' ', ' ', ' ', ' ', '|', ' ', ' ', '|', ' ', ' ', ' ', ' ', ' '},
@@ -261,7 +265,8 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      0,
      12,
-     10},
+     10,
+     0},
     // room 12 (boss room)
     {{{' ', ' ', ' ', ' ', '+', '-', '-', '-', '-', '+', ' ', ' ', ' ', ' '},
       {' ', ' ', ' ', ' ', '|', ' ', ' ', ' ', ' ', '|', ' ', ' ', ' ', ' '},
@@ -272,11 +277,19 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      0,
      0,
-     11},
+     11,
+     0},
 };
 
 int *curr_room_index = new int(0);
 char room_buffer[ROWS][COLUMNS];
+
+short *num_buf = new short(0);
+void copy_enemies_to_buffer()
+{
+  memcpy_P(num_buf, &game_map[*curr_room_index].number_of_enemies, sizeof(num_buf));
+  Serial.println(*num_buf);
+}
 
 struct game_screen
 {
@@ -455,19 +468,21 @@ short SM_GAME_Tick(short state)
     state = SM_GAME_OVERWORLD;
     break;
   case SM_GAME_OVERWORLD:
-    if (enemy.y == player.y && (enemy.x == player.x + 1 || enemy.x == player.x - 1))
-    {
-      state = SM_GAME_COMBAT;
-    }
-    else if (enemy.x == player.x && (enemy.y == player.y + 1 || enemy.y == player.y - 1))
-    {
-      state = SM_GAME_COMBAT;
-    }
+    // TODO: Fix enemies
+    // if (enemy.y == player.y && (enemy.x == player.x + 1 || enemy.x == player.x - 1))
+    // {
+    //   state = SM_GAME_COMBAT;
+    // }
+    // else if (enemy.x == player.x && (enemy.y == player.y + 1 || enemy.y == player.y - 1))
+    // {
+    //   state = SM_GAME_COMBAT;
+    // }
     break;
   }
   switch (state)
   {
   case SM_GAME_OVERWORLD:
+    // Serial.print(*curr_room_index);
     memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
     switch (currInput)
     {
@@ -476,6 +491,7 @@ short SM_GAME_Tick(short state)
       {
         memcpy_P(curr_room_index, &game_map[*curr_room_index].top_room_index, sizeof(curr_room_index));
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        copy_enemies_to_buffer();
         player.y = ROWS;
       }
       if (game_screen.game_screen_buffer[player.y - 1][player.x] == ' ')
@@ -488,6 +504,7 @@ short SM_GAME_Tick(short state)
       {
         memcpy_P(curr_room_index, &game_map[*curr_room_index].bottom_room_index, sizeof(curr_room_index));
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        copy_enemies_to_buffer();
         player.y = 0;
       }
       else if (game_screen.game_screen_buffer[player.y + 1][player.x] == ' ')
@@ -500,6 +517,7 @@ short SM_GAME_Tick(short state)
       {
         memcpy_P(curr_room_index, &game_map[*curr_room_index].left_room_index, sizeof(curr_room_index));
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        copy_enemies_to_buffer();
         player.x = COLUMNS - 1;
       }
       else if (game_screen.game_screen_buffer[player.y][player.x - 1] == ' ')
@@ -512,6 +530,7 @@ short SM_GAME_Tick(short state)
       {
         memcpy_P(curr_room_index, &game_map[*curr_room_index].right_room_index, sizeof(curr_room_index));
         memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        copy_enemies_to_buffer();
         player.x = 0;
       }
       else if (game_screen.game_screen_buffer[player.y][player.x + 1] == ' ')
@@ -520,17 +539,29 @@ short SM_GAME_Tick(short state)
       }
       break;
     default:
-      Serial.println(currInput);
+      // Serial.println(currInput);
       break;
     }
-    enemy_move_counter++;
-    if (enemy.move_tick_delay < enemy_move_counter)
-    {
-      enemy.move_towards_avatar();
-      enemy_move_counter = 0;
-    }
+    // TODO: Fix enemeies
+    // enemy_move_counter++;
+    // if (enemy.move_tick_delay < enemy_move_counter)
+    // {
+    //   enemy.move_towards_avatar();
+    //   enemy_move_counter = 0;
+    // }
+
+    // TODO: Show enemies on certain stages
+    // if (game_map[*curr_room_index].number_of_enemies > 0)
+    // {
+    //   for (short i = 0; i < game_map[*curr_room_index].number_of_enemies; i++)
+    //   {
+    //     game_screen.game_screen_buffer[*enemies_in_room[i].y_buffer][*enemies_in_room[i].x_buffer] = *enemies_in_room[i].enemy_avatar_buffer;
+    //     Serial.print("enemy x: ");
+    //     Serial.println(*enemies_in_room[i].x_buffer);
+    //   }
+    // }
     game_screen.copy_room_to_buffer(room_buffer);
-    game_screen.game_screen_buffer[enemy.y][enemy.x] = enemy.enemy_avatar;
+    // game_screen.game_screen_buffer[enemy.y][enemy.x] = enemy.enemy_avatar;
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
     nokia_screen.clearDisplay();
     nokia_screen.setCursor(0, 0);
