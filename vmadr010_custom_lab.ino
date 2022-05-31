@@ -245,7 +245,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
         1,
         0,
         2,
-        {{"skeleton", 1, 1, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skeleton", 1, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}}},
+        {{"skeleton", 12, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skeleton", 1, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}}},
     // room 6
     {
         {{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
@@ -784,7 +784,7 @@ void setup()
 
   nokia_screen.setRotation(2);
   nokia_screen.begin();
-  nokia_screen.setContrast(50);
+  nokia_screen.setContrast(70);
   nokia_screen.clearDisplay();
   nokia_screen.setTextSize(1);
   nokia_screen.setTextColor(BLACK);
