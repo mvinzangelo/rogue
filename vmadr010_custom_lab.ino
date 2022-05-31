@@ -28,6 +28,8 @@
 int *curr_room_index = new int(0);
 char room_buffer[ROWS][COLUMNS];
 short *num_of_enemies_buffer = new short(0);
+uint8_t current_enemy_index = 0;
+bool is_joystick_down = false;
 
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 char lcd_buffer[18];
@@ -492,8 +494,25 @@ enum SM_GAME_STATES
 {
   SM_GAME_INIT,
   SM_GAME_OVERWORLD,
-  SM_GAME_COMBAT
+  SM_GAME_COMBAT,
+  SM_GAME_COMBAT_WIN,
+  SM_GAME_DEATH
 };
+
+void player_combat_turn()
+{
+  lcd.setCursor(0, 0);
+  int dice_roll = random(7);
+  if (dice_roll == 6)
+  {
+    lcd.print(F("you hit"));
+    enemies_in_room[current_enemy_index].hp -= player.str;
+  }
+  else
+  {
+    lcd.print(F("you miss"));
+  }
+}
 
 short SM_GAME_Tick(short state)
 {
@@ -511,14 +530,29 @@ short SM_GAME_Tick(short state)
         if (enemies_in_room[i].y == player.y && (enemies_in_room[i].x == player.x + 1 || enemies_in_room[i].x == player.x - 1))
         {
           state = SM_GAME_COMBAT;
+          current_enemy_index = i;
+          lcd.clear();
+          player_combat_turn();
         }
         else if (enemies_in_room[i].x == player.x && (enemies_in_room[i].y == player.y + 1 || enemies_in_room[i].y == player.y - 1))
         {
           state = SM_GAME_COMBAT;
+          current_enemy_index = i;
+          lcd.clear();
+          player_combat_turn();
         }
       }
     }
     break;
+  case SM_GAME_COMBAT:
+    if (player.hp <= 0)
+    {
+      state = SM_GAME_DEATH;
+    }
+    if (enemies_in_room[current_enemy_index].hp <= 0)
+    {
+      state = SM_GAME_COMBAT_WIN;
+    }
   }
   switch (state)
   {
@@ -581,26 +615,8 @@ short SM_GAME_Tick(short state)
     default:
       break;
     }
-    // enemy_move_counter++;
-    // if (enemy.move_tick_delay < enemy_move_counter)
-    // {
-    //   enemy.move_towards_avatar();
-    //   enemy_move_counter = 0;
-    // }
     move_enemies_toward_player();
-
-    // TODO: Show enemies on certain stages
-    // if (game_map[*curr_room_index].number_of_enemies > 0)
-    // {
-    //   for (short i = 0; i < game_map[*curr_room_index].number_of_enemies; i++)
-    //   {
-    //     game_screen.game_screen_buffer[*enemies_in_room[i].y_buffer][*enemies_in_room[i].x_buffer] = *enemies_in_room[i].enemy_avatar_buffer;
-    //     Serial.print("enemy x: ");
-    //     Serial.println(*enemies_in_room[i].x_buffer);
-    //   }
-    // }
     game_screen.copy_room_to_buffer(room_buffer);
-    // game_screen.game_screen_buffer[enemy.y][enemy.x] = enemy.enemy_avatar;
     put_enemies_on_screen();
     game_screen.game_screen_buffer[player.y][player.x] = player.player_avatar;
     nokia_screen.clearDisplay();
@@ -610,9 +626,22 @@ short SM_GAME_Tick(short state)
     player.print_player_info_on_lcd();
     break;
   case SM_GAME_COMBAT:
-    lcd.clear();
-    lcd.print("IN COMBAT");
+    if (!digitalRead(joystickBtn) && !is_joystick_down)
+    {
+      lcd.clear();
+      player_combat_turn();
+      is_joystick_down = true;
+    }
+    if (digitalRead(joystickBtn))
+    {
+      is_joystick_down = false;
+    }
     break;
+  case SM_GAME_COMBAT_WIN:
+    lcd.clear();
+    lcd.print(F("you defeated the"));
+    lcd.setCursor(0, 1);
+    lcd.print(enemies_in_room[current_enemy_index].enemy_name);
   }
   return state;
 }
@@ -633,7 +662,7 @@ void setup()
 {
   Serial.begin(9600);
 
-  // randomSeed(analogRead(0));
+  randomSeed(analogRead(0));
 
   unsigned char i = 0;
   tasks[i].state = SM_JOYSTICK_INPUT_INIT;
