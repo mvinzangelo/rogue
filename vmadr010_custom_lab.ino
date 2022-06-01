@@ -188,28 +188,28 @@ void enemy::move_towards_avatar()
   {
     if (player.y > y)
     {
-      if (/*!is_occupied_by_other_enemy(x, y + 1) && */ is_open_space(x, y + 1))
+      if (!is_occupied_by_other_enemy(x, y + 1) && is_open_space(x, y + 1))
       {
         y++;
       }
     }
     else if (player.y < y)
     {
-      if (/*!is_occupied_by_other_enemy(x, y - 1) && */ is_open_space(x, y - 1))
+      if (!is_occupied_by_other_enemy(x, y - 1) && is_open_space(x, y - 1))
       {
         y--;
       }
     }
     if (player.x > x)
     {
-      if (/*!is_occupied_by_other_enemy(x + 1, y) && */ is_open_space(x + 1, y))
+      if (!is_occupied_by_other_enemy(x + 1, y) && is_open_space(x + 1, y))
       {
         x++;
       }
     }
     else if (player.x < x)
     {
-      if (/*!is_occupied_by_other_enemy(x - 1, y) && */ is_open_space(x - 1, y))
+      if (!is_occupied_by_other_enemy(x - 1, y) && is_open_space(x - 1, y))
       {
         x--;
       }
