@@ -40,6 +40,38 @@ LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 char lcd_buffer[18];
 Adafruit_PCD8544 nokia_screen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
 
+struct game_screen
+{
+  char game_screen_buffer[ROWS][COLUMNS];
+  std::string get_screen_buffer();
+  void copy_room_to_buffer(char curr[ROWS][COLUMNS]);
+} game_screen;
+
+std::string game_screen::get_screen_buffer()
+{
+  std::string tmp;
+  short count = 0;
+  for (short i = 0; i < ROWS; i++)
+  {
+    for (short j = 0; j < COLUMNS; j++)
+    {
+      tmp.push_back(game_screen_buffer[i][j]);
+    }
+  }
+  return tmp;
+}
+void game_screen::copy_room_to_buffer(char curr[ROWS][COLUMNS])
+{
+  for (short i = 0; i < ROWS; i++)
+  {
+    for (short j = 0; j < COLUMNS; j++)
+    {
+      game_screen_buffer[i][j] = curr[i][j];
+    }
+  }
+  return;
+}
+
 struct player
 {
   uint8_t x = 6;
@@ -112,11 +144,43 @@ struct enemy
   uint8_t xp_on_kill;
   uint8_t move_tick_delay_counter;
   void move_towards_avatar();
+  bool is_occupied_by_other_enemy(uint8_t x, uint8_t y);
+  bool is_open_space(uint8_t x, uint8_t y);
 };
 
 enemy enemies_in_room[3];
 
 short enemy_move_counter = 0;
+
+bool enemy::is_occupied_by_other_enemy(uint8_t x, uint8_t y)
+{
+  for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
+  {
+    if (i == current_enemy_index)
+    {
+    }
+    else
+    {
+      if ((enemies_in_room[i].x == x) && (enemies_in_room[i].y == y))
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool enemy::is_open_space(uint8_t x, uint8_t y)
+{
+  if (game_screen.game_screen_buffer[y][x] == ' ')
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
 
 void enemy::move_towards_avatar()
 {
@@ -124,19 +188,31 @@ void enemy::move_towards_avatar()
   {
     if (player.y > y)
     {
-      y++;
+      if (/*!is_occupied_by_other_enemy(x, y + 1) && */ is_open_space(x, y + 1))
+      {
+        y++;
+      }
     }
     else if (player.y < y)
     {
-      y--;
+      if (/*!is_occupied_by_other_enemy(x, y - 1) && */ is_open_space(x, y - 1))
+      {
+        y--;
+      }
     }
     if (player.x > x)
     {
-      x++;
+      if (/*!is_occupied_by_other_enemy(x + 1, y) && */ is_open_space(x + 1, y))
+      {
+        x++;
+      }
     }
     else if (player.x < x)
     {
-      x--;
+      if (/*!is_occupied_by_other_enemy(x - 1, y) && */ is_open_space(x - 1, y))
+      {
+        x--;
+      }
     }
   }
 }
@@ -361,38 +437,6 @@ void copy_enemies_to_buffer()
       enemies_in_room[i].move_tick_delay_counter = 0;
     }
   }
-}
-
-struct game_screen
-{
-  char game_screen_buffer[ROWS][COLUMNS];
-  std::string get_screen_buffer();
-  void copy_room_to_buffer(char curr[ROWS][COLUMNS]);
-} game_screen;
-
-std::string game_screen::get_screen_buffer()
-{
-  std::string tmp;
-  short count = 0;
-  for (short i = 0; i < ROWS; i++)
-  {
-    for (short j = 0; j < COLUMNS; j++)
-    {
-      tmp.push_back(game_screen_buffer[i][j]);
-    }
-  }
-  return tmp;
-}
-void game_screen::copy_room_to_buffer(char curr[ROWS][COLUMNS])
-{
-  for (short i = 0; i < ROWS; i++)
-  {
-    for (short j = 0; j < COLUMNS; j++)
-    {
-      game_screen_buffer[i][j] = curr[i][j];
-    }
-  }
-  return;
 }
 
 void put_enemies_on_screen()
@@ -747,7 +791,7 @@ short SM_GAME_Tick(short state)
     }
     player.print_player_info_on_lcd();
     nokia_screen.clearDisplay();
-    nokia_screen.setCursor(30, 5);
+    nokia_screen.setCursor(28, 5);
     nokia_screen.println(F("ROGUE"));
     if (is_start_selected)
     {
