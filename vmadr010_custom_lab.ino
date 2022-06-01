@@ -71,7 +71,7 @@ void player::print_player_info_on_lcd()
 
 // player scaling constants
 #define STR_INC_ON_LVL_UP 2
-#define HP_INC_ON_LVL_UP 5
+#define HP_INC_ON_LVL_UP 3
 #define XP_THRESHOLD 10
 
 // enemy constants
@@ -80,18 +80,18 @@ void player::print_player_info_on_lcd()
 #define GOBLIN_XP 2
 #define GOBLIN_TICK_DELAY 5
 
-#define SKELETON_HP 10
+#define SKELETON_HP 5
 #define SKELETON_STR 2
 #define SKELETON_XP 5
 #define SKELETON_TICK_DELAY 8
 
-#define KNIGHT_HP 15
-#define KNIGHT_STR 5
+#define KNIGHT_HP 10
+#define KNIGHT_STR 3
 #define KNIGHT_XP 10
 #define KNIGHT_TICK_DELAY 15
 
 #define DRAGON_HP 30
-#define DRAGON_STR 10
+#define DRAGON_STR 8
 #define DRAGON_XP 30
 #define DRAGON_TICK_DELAY 20
 
