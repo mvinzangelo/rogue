@@ -38,6 +38,9 @@ uint8_t current_enemy_index = 0;
 bool is_joystick_down = false;
 bool cleared_rooms[NUMBER_OF_ROOMS] = {false};
 
+#define COMBAT_DELAY 3
+uint8_t combat_counter = 0;
+
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 char lcd_buffer[18];
 Adafruit_PCD8544 nokia_screen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
@@ -709,6 +712,7 @@ short SM_GAME_Tick(short state)
       check_if_room_clear();
       if (cleared_rooms[NUMBER_OF_ROOMS - 1])
       {
+        save_player_stats_to_eeprom();
         state = SM_GAME_VICTORY;
       }
       else
@@ -724,6 +728,12 @@ short SM_GAME_Tick(short state)
       state = SM_GAME_MENU;
     }
     break;
+  case SM_GAME_VICTORY:
+    if (!digitalRead(joystickBtn))
+    {
+      read_player_stats_from_eeprom();
+      state = SM_GAME_MENU;
+    }
   }
 
   switch (state)
@@ -830,16 +840,17 @@ short SM_GAME_Tick(short state)
     player.print_player_info_on_lcd();
     break;
   case SM_GAME_COMBAT:
-    if (!digitalRead(joystickBtn) && !is_joystick_down)
+
+    if (combat_counter >= COMBAT_DELAY)
     {
       lcd.clear();
       player_combat_turn();
       enemy_combat_turn();
-      is_joystick_down = true;
+      combat_counter = 0;
     }
-    if (digitalRead(joystickBtn))
+    else
     {
-      is_joystick_down = false;
+      combat_counter++;
     }
     break;
   case SM_GAME_COMBAT_WIN:
@@ -854,7 +865,16 @@ short SM_GAME_Tick(short state)
     lcd.print(F("you died."));
     lcd.setCursor(0, 1);
     lcd.print(F("press to restart"));
+    break;
+  case SM_GAME_VICTORY:
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("you won!"));
+    lcd.setCursor(0, 1);
+    lcd.print(F("press to restart"));
+    break;
   }
+
   return state;
 }
 
