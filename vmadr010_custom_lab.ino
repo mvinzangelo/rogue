@@ -635,6 +635,7 @@ short SM_GAME_Tick(short state)
         cleared_rooms[i] = false;
       }
       memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
+      num_of_enemies_buffer = 0;
       state = SM_GAME_OVERWORLD;
     }
     else if (!is_start_selected && !digitalRead(joystickBtn))
