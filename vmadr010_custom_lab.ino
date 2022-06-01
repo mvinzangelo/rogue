@@ -11,11 +11,6 @@
 #define COLUMNS 14
 #define NUMBER_OF_ROOMS 13
 
-// player scaling constants
-#define STR_INC_ON_LVL_UP 2
-#define HP_INC_ON_LVL_UP 5
-#define XP_THRESHOLD 10
-
 // lcd constants
 #define rs 8
 #define en 7
@@ -73,6 +68,11 @@ void player::print_player_info_on_lcd()
   sprintf(lcd_buffer, " str: %i", str);
   lcd.print(lcd_buffer);
 }
+
+// player scaling constants
+#define STR_INC_ON_LVL_UP 2
+#define HP_INC_ON_LVL_UP 5
+#define XP_THRESHOLD 10
 
 // enemy constants
 #define GOBLIN_HP 2
@@ -690,24 +690,19 @@ short SM_GAME_Tick(short state)
     }
     break;
   case SM_GAME_COMBAT_WIN:
-    if (!digitalRead(joystickBtn))
+    if (!digitalRead(joystickBtn) || currInput != NEUTRAL)
     {
       player.xp += enemies_in_room[current_enemy_index].xp_on_kill;
       if (player.xp >= XP_THRESHOLD)
       {
-        player.lvl++;
-        player.str += STR_INC_ON_LVL_UP;
-        player.max_hp += HP_INC_ON_LVL_UP;
+        while (player.xp > XP_THRESHOLD)
+        {
+          player.lvl++;
+          player.str += STR_INC_ON_LVL_UP;
+          player.max_hp += HP_INC_ON_LVL_UP;
+          player.xp -= XP_THRESHOLD;
+        }
         player.hp = player.max_hp;
-        if (player.xp > XP_THRESHOLD)
-        {
-          uint8_t overflow = player.xp % XP_THRESHOLD;
-          player.xp = overflow;
-        }
-        else
-        {
-          player.xp = 0;
-        }
       }
       check_if_room_clear();
       if (cleared_rooms[NUMBER_OF_ROOMS - 1])
