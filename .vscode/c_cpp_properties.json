@@ -47,6 +47,7 @@
                 "/home/vinz/Arduino/libraries/Adafruit_PCD8544_Nokia_5110_LCD_library",
                 "/home/vinz/Arduino/libraries/Adafruit_BusIO",
                 "/home/vinz/Downloads/arduino-1.8.19/libraries/LiquidCrystal/src",
+                "/home/vinz/Downloads/arduino-1.8.19/hardware/arduino/avr/libraries/EEPROM/src",
                 "/home/vinz/Downloads/arduino-1.8.19/hardware/arduino/avr/libraries/Wire/src",
                 "/home/vinz/Downloads/arduino-1.8.19/hardware/tools/avr/lib/gcc/avr/7.3.0/include",
                 "/home/vinz/Downloads/arduino-1.8.19/hardware/tools/avr/lib/gcc/avr/7.3.0/include-fixed",

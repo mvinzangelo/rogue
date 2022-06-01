@@ -3,5 +3,8 @@
     "Adafruit",
     "millis",
     "PROGMEM"
-  ]
+  ],
+  "files.associations": {
+    "ios": "cpp"
+  }
 }

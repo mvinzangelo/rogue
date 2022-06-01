@@ -5,6 +5,7 @@
 #include <Adafruit_PCD8544.h>
 #include <LiquidCrystal.h>
 #include <avr/pgmspace.h>
+#include <EEPROM.h>
 
 #define ROWS 6
 #define COLUMNS 14
@@ -30,12 +31,15 @@
 #define ce 10
 #define rst 11
 
-int *curr_room_index = new int(0);
+uint8_t current_room_index = 0;
 char room_buffer[ROWS][COLUMNS];
-short *num_of_enemies_buffer = new short(0);
+uint8_t num_of_enemies_buffer = 0;
 uint8_t current_enemy_index = 0;
 bool is_joystick_down = false;
 bool cleared_rooms[NUMBER_OF_ROOMS] = {false};
+
+#define COMBAT_DELAY 5
+uint8_t combat_counter = 0;
 
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 char lcd_buffer[18];
@@ -46,11 +50,11 @@ struct player
   uint8_t x = 6;
   uint8_t y = 3;
   char player_avatar = '@';
-  uint8_t lvl = 1;
-  uint8_t max_hp = 10;
-  uint8_t hp = 99;  // orig: 10
-  uint8_t str = 99; // orig: 1
-  uint8_t xp = 0;
+  uint8_t lvl;
+  int8_t max_hp;
+  int8_t hp;
+  uint8_t str;
+  uint8_t xp;
   void print_player_info_on_lcd();
 } player;
 void player::print_player_info_on_lcd()
@@ -116,7 +120,7 @@ short enemy_move_counter = 0;
 
 void enemy::move_towards_avatar()
 {
-  if (hp > 0 && !cleared_rooms[*curr_room_index])
+  if (hp > 0 && !cleared_rooms[current_room_index])
   {
     if (player.y > y)
     {
@@ -139,9 +143,9 @@ void enemy::move_towards_avatar()
 
 void move_enemies_toward_player()
 {
-  if (*num_of_enemies_buffer > 0)
+  if (num_of_enemies_buffer > 0)
   {
-    for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+    for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
     {
       if (enemies_in_room[i].move_tick_delay < enemies_in_room[i].move_tick_delay_counter)
       {
@@ -259,7 +263,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
         2,
         0,
         3,
-        {{"skeleton", 2, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skeleton", 6, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_HP}, {"skeleton", 8, 4, 'K', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_HP, SKELETON_XP}}},
+        {{"skeleton", 2, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skeleton", 6, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_HP}, {"skeleton", 8, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_HP, SKELETON_XP}}},
     // room 7
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -341,19 +345,19 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
 
 void copy_enemies_to_buffer()
 {
-  memcpy_P(num_of_enemies_buffer, &game_map[*curr_room_index].number_of_enemies, sizeof(num_of_enemies_buffer));
-  if (*num_of_enemies_buffer > 0)
+  num_of_enemies_buffer = pgm_read_word_near(&game_map[current_room_index].number_of_enemies);
+  if (num_of_enemies_buffer > 0)
   {
-    for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+    for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
     {
-      enemies_in_room[i].x = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].x);
-      enemies_in_room[i].y = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].y);
-      enemies_in_room[i].enemy_name = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].enemy_name);
-      enemies_in_room[i].enemy_avatar = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].enemy_avatar);
-      enemies_in_room[i].move_tick_delay = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].move_tick_delay);
-      enemies_in_room[i].hp = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].hp);
-      enemies_in_room[i].str = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].str);
-      enemies_in_room[i].xp_on_kill = pgm_read_word_near(&game_map[*curr_room_index].room_enemies[i].xp_on_kill);
+      enemies_in_room[i].x = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].x);
+      enemies_in_room[i].y = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].y);
+      enemies_in_room[i].enemy_name = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].enemy_name);
+      enemies_in_room[i].enemy_avatar = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].enemy_avatar);
+      enemies_in_room[i].move_tick_delay = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].move_tick_delay);
+      enemies_in_room[i].hp = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].hp);
+      enemies_in_room[i].str = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].str);
+      enemies_in_room[i].xp_on_kill = pgm_read_word_near(&game_map[current_room_index].room_enemies[i].xp_on_kill);
       enemies_in_room[i].move_tick_delay_counter = 0;
     }
   }
@@ -393,11 +397,11 @@ void game_screen::copy_room_to_buffer(char curr[ROWS][COLUMNS])
 
 void put_enemies_on_screen()
 {
-  if (*num_of_enemies_buffer > 0)
+  if (num_of_enemies_buffer > 0)
   {
-    for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+    for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
     {
-      if (enemies_in_room[i].hp > 0 && !cleared_rooms[*curr_room_index])
+      if (enemies_in_room[i].hp > 0 && !cleared_rooms[current_room_index])
       {
         game_screen.game_screen_buffer[enemies_in_room[i].y][enemies_in_room[i].x] = enemies_in_room[i].enemy_avatar;
       }
@@ -531,6 +535,7 @@ short SM_JOYSTICK_INPUT_Tick(short state)
 
 enum SM_GAME_STATES
 {
+  SM_GAME_INIT,
   SM_GAME_MENU,
   SM_GAME_OVERWORLD,
   SM_GAME_COMBAT,
@@ -574,33 +579,84 @@ void enemy_combat_turn()
 void check_if_room_clear()
 {
   uint8_t cnt = 0;
-  for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+  for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
   {
     if (enemies_in_room[i].hp <= 0)
     {
       cnt++;
     }
   }
-  if (cnt == *num_of_enemies_buffer)
+  if (cnt == num_of_enemies_buffer)
   {
-    cleared_rooms[*curr_room_index] = true;
+    cleared_rooms[current_room_index] = true;
   }
 }
+
+void read_player_stats_from_eeprom()
+{
+  player.lvl = EEPROM.read(0);
+  player.max_hp = EEPROM.read(1);
+  player.str = EEPROM.read(2);
+  player.xp = EEPROM.read(3);
+  player.hp = player.max_hp;
+}
+
+void save_player_stats_to_eeprom()
+{
+  EEPROM.update(0, player.lvl);
+  EEPROM.update(1, player.max_hp);
+  EEPROM.update(2, player.str);
+  EEPROM.update(3, player.xp);
+}
+
+void reset_player_stats_on_eeprom()
+{
+  EEPROM.write(0, 1);
+  EEPROM.write(1, 10);
+  EEPROM.write(2, 1);
+  EEPROM.write(3, 0);
+  player.hp = player.max_hp;
+}
+
+bool is_start_selected = true;
 
 short SM_GAME_Tick(short state)
 {
   switch (state)
   {
+  case SM_GAME_INIT:
+    state = SM_GAME_MENU;
   case SM_GAME_MENU:
-    memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
-    state = SM_GAME_OVERWORLD;
+    Serial.println(player.lvl);
+    if (is_start_selected && !digitalRead(joystickBtn))
+    {
+      current_room_index = 0;
+      player.x = 6;
+      player.y = 3;
+      for (uint8_t i = 0; i < NUMBER_OF_ROOMS; i++)
+      {
+        cleared_rooms[i] = false;
+      }
+      memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
+      num_of_enemies_buffer = 0;
+      state = SM_GAME_OVERWORLD;
+    }
+    else if (!is_start_selected && !digitalRead(joystickBtn))
+    {
+      reset_player_stats_on_eeprom();
+      read_player_stats_from_eeprom();
+    }
+    else
+    {
+      state = SM_GAME_MENU;
+    }
     break;
   case SM_GAME_OVERWORLD:
-    if (*num_of_enemies_buffer > 0)
+    if (num_of_enemies_buffer > 0)
     {
-      for (uint8_t i = 0; i < *num_of_enemies_buffer; i++)
+      for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
       {
-        if (enemies_in_room[i].hp > 0 && !cleared_rooms[*curr_room_index])
+        if (enemies_in_room[i].hp > 0 && !cleared_rooms[current_room_index])
         {
           if (enemies_in_room[i].y == player.y && (enemies_in_room[i].x == player.x + 1 || enemies_in_room[i].x == player.x - 1))
           {
@@ -623,9 +679,9 @@ short SM_GAME_Tick(short state)
     }
     break;
   case SM_GAME_COMBAT:
-    Serial.println(enemies_in_room[current_enemy_index].hp);
     if (player.hp <= 0)
     {
+      save_player_stats_to_eeprom();
       state = SM_GAME_DEATH;
     }
     else if (enemies_in_room[current_enemy_index].hp <= 0)
@@ -653,20 +709,76 @@ short SM_GAME_Tick(short state)
           player.xp = 0;
         }
       }
-      state = SM_GAME_OVERWORLD;
+      check_if_room_clear();
+      if (cleared_rooms[NUMBER_OF_ROOMS - 1])
+      {
+        save_player_stats_to_eeprom();
+        state = SM_GAME_VICTORY;
+      }
+      else
+      {
+        state = SM_GAME_OVERWORLD;
+      }
+    }
+    break;
+  case SM_GAME_DEATH:
+    if (!digitalRead(joystickBtn))
+    {
+      read_player_stats_from_eeprom();
+      state = SM_GAME_MENU;
+    }
+    break;
+  case SM_GAME_VICTORY:
+    if (!digitalRead(joystickBtn))
+    {
+      read_player_stats_from_eeprom();
+      state = SM_GAME_MENU;
     }
   }
+
   switch (state)
   {
+  case SM_GAME_MENU:
+    switch (currInput)
+    {
+    case UP:
+      is_start_selected = !is_start_selected;
+      break;
+    case DOWN:
+      is_start_selected = !is_start_selected;
+      break;
+    default:
+      break;
+    }
+    player.print_player_info_on_lcd();
+    nokia_screen.clearDisplay();
+    nokia_screen.setCursor(30, 5);
+    nokia_screen.println(F("ROGUE"));
+    if (is_start_selected)
+    {
+      nokia_screen.setCursor(0, 23);
+      nokia_screen.println(F("> start"));
+      nokia_screen.setCursor(0, 35);
+      nokia_screen.println(F("reset"));
+    }
+    else
+    {
+      nokia_screen.setCursor(0, 23);
+      nokia_screen.println(F("start"));
+      nokia_screen.setCursor(0, 35);
+      nokia_screen.println(F("> reset"));
+    }
+    nokia_screen.display();
+    break;
   case SM_GAME_OVERWORLD:
-    memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+    memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
     switch (currInput)
     {
     case UP:
       if (player.y == 0)
       {
-        memcpy_P(curr_room_index, &game_map[*curr_room_index].top_room_index, sizeof(curr_room_index));
-        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        current_room_index = pgm_read_word_near(&game_map[current_room_index].top_room_index);
+        memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
         copy_enemies_to_buffer();
         player.y = ROWS;
       }
@@ -678,8 +790,8 @@ short SM_GAME_Tick(short state)
     case DOWN:
       if (player.y == ROWS - 1)
       {
-        memcpy_P(curr_room_index, &game_map[*curr_room_index].bottom_room_index, sizeof(curr_room_index));
-        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        current_room_index = pgm_read_word_near(&game_map[current_room_index].bottom_room_index);
+        memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
         copy_enemies_to_buffer();
         player.y = 0;
       }
@@ -691,8 +803,8 @@ short SM_GAME_Tick(short state)
     case LEFT:
       if (player.x == 0)
       {
-        memcpy_P(curr_room_index, &game_map[*curr_room_index].left_room_index, sizeof(curr_room_index));
-        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        current_room_index = pgm_read_word_near(&game_map[current_room_index].left_room_index);
+        memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
         copy_enemies_to_buffer();
         player.x = COLUMNS - 1;
       }
@@ -704,8 +816,8 @@ short SM_GAME_Tick(short state)
     case RIGHT:
       if (player.x == COLUMNS - 1)
       {
-        memcpy_P(curr_room_index, &game_map[*curr_room_index].right_room_index, sizeof(curr_room_index));
-        memcpy_P(&room_buffer, &game_map[*curr_room_index], sizeof(room_buffer));
+        current_room_index = pgm_read_word_near(&game_map[current_room_index].right_room_index);
+        memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
         copy_enemies_to_buffer();
         player.x = 0;
       }
@@ -728,25 +840,42 @@ short SM_GAME_Tick(short state)
     player.print_player_info_on_lcd();
     break;
   case SM_GAME_COMBAT:
-    if (!digitalRead(joystickBtn) && !is_joystick_down)
+
+    if (combat_counter >= COMBAT_DELAY)
     {
       lcd.clear();
       player_combat_turn();
       enemy_combat_turn();
-      is_joystick_down = true;
+      combat_counter = 0;
     }
-    if (digitalRead(joystickBtn))
+    else if (combat_counter == COMBAT_DELAY - 1)
     {
-      is_joystick_down = false;
+      lcd.clear();
     }
+    combat_counter++;
     break;
   case SM_GAME_COMBAT_WIN:
     lcd.clear();
     lcd.print(F("you defeated the"));
     lcd.setCursor(0, 1);
     lcd.print(enemies_in_room[current_enemy_index].enemy_name);
-    check_if_room_clear();
+    break;
+  case SM_GAME_DEATH:
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("you died."));
+    lcd.setCursor(0, 1);
+    lcd.print(F("press to restart"));
+    break;
+  case SM_GAME_VICTORY:
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("you won!"));
+    lcd.setCursor(0, 1);
+    lcd.print(F("press to restart"));
+    break;
   }
+
   return state;
 }
 
@@ -774,7 +903,7 @@ void setup()
   tasks[i].elapsedTime = 0;
   tasks[i].TickFct = &SM_JOYSTICK_INPUT_Tick;
   i++;
-  tasks[i].state = SM_GAME_OVERWORLD;
+  tasks[i].state = SM_GAME_MENU;
   tasks[i].period = 200;
   tasks[i].elapsedTime = 0;
   tasks[i].TickFct = &SM_GAME_Tick;
@@ -789,6 +918,9 @@ void setup()
   nokia_screen.clearDisplay();
   nokia_screen.setTextSize(1);
   nokia_screen.setTextColor(BLACK);
+
+  // reset_player_stats_on_eeprom();
+  read_player_stats_from_eeprom();
 }
 
 void loop()
