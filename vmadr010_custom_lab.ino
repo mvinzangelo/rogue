@@ -181,38 +181,65 @@ bool enemy::is_open_space(uint8_t x, uint8_t y)
     return false;
   }
 }
-
 void enemy::move_towards_avatar()
 {
   if (hp > 0 && !cleared_rooms[current_room_index])
   {
+    std::vector<uint8_t> potential_moves;
     if (player.y > y)
     {
       if (!is_occupied_by_other_enemy(x, y + 1) && is_open_space(x, y + 1))
       {
-        y++;
+        potential_moves.push_back(0);
       }
     }
     else if (player.y < y)
     {
       if (!is_occupied_by_other_enemy(x, y - 1) && is_open_space(x, y - 1))
       {
-        y--;
+        potential_moves.push_back(1);
       }
     }
     if (player.x > x)
     {
       if (!is_occupied_by_other_enemy(x + 1, y) && is_open_space(x + 1, y))
       {
-        x++;
+        potential_moves.push_back(2);
       }
     }
     else if (player.x < x)
     {
       if (!is_occupied_by_other_enemy(x - 1, y) && is_open_space(x - 1, y))
       {
-        x--;
+        potential_moves.push_back(3);
       }
+    }
+    uint8_t current_move = 0;
+    if (potential_moves.size() > 1)
+    {
+      int random_index = random(2);
+      current_move = potential_moves.at(random_index);
+    }
+    else
+    {
+      current_move = potential_moves.back();
+    }
+    switch (current_move)
+    {
+    case 0:
+      y++;
+      break;
+    case 1:
+      y--;
+      break;
+    case 2:
+      x++;
+      break;
+    case 3:
+      x--;
+      break;
+    default:
+      break;
     }
   }
 }
@@ -671,7 +698,6 @@ short SM_GAME_Tick(short state)
   case SM_GAME_INIT:
     state = SM_GAME_MENU;
   case SM_GAME_MENU:
-    Serial.println(player.lvl);
     if (is_start_selected && !digitalRead(joystickBtn))
     {
       current_room_index = 0;
@@ -711,6 +737,14 @@ short SM_GAME_Tick(short state)
             enemy_combat_turn();
           }
           else if (enemies_in_room[i].x == player.x && (enemies_in_room[i].y == player.y + 1 || enemies_in_room[i].y == player.y - 1))
+          {
+            state = SM_GAME_COMBAT;
+            current_enemy_index = i;
+            lcd.clear();
+            player_combat_turn();
+            enemy_combat_turn();
+          }
+          else if (enemies_in_room[i].x == player.x && enemies_in_room[i].y == player.y)
           {
             state = SM_GAME_COMBAT;
             current_enemy_index = i;
