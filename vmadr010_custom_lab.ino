@@ -51,9 +51,9 @@ struct player
   uint8_t y = 3;
   char player_avatar = '@';
   uint8_t lvl;
-  int8_t max_hp; // orig: 10
-  int8_t hp;     // orig: 10
-  uint8_t str;   // orig: 1
+  int8_t max_hp;
+  int8_t hp;
+  uint8_t str;
   uint8_t xp;
   void print_player_info_on_lcd();
 } player;
