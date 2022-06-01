@@ -38,7 +38,7 @@ uint8_t current_enemy_index = 0;
 bool is_joystick_down = false;
 bool cleared_rooms[NUMBER_OF_ROOMS] = {false};
 
-#define COMBAT_DELAY 3
+#define COMBAT_DELAY 5
 uint8_t combat_counter = 0;
 
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
@@ -848,10 +848,11 @@ short SM_GAME_Tick(short state)
       enemy_combat_turn();
       combat_counter = 0;
     }
-    else
+    else if (combat_counter == COMBAT_DELAY - 1)
     {
-      combat_counter++;
+      lcd.clear();
     }
+    combat_counter++;
     break;
   case SM_GAME_COMBAT_WIN:
     lcd.clear();
