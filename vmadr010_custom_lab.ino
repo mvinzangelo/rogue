@@ -48,9 +48,9 @@ struct player
   uint8_t y = 3;
   char player_avatar = '@';
   uint8_t lvl;
-  uint8_t max_hp; // orig: 10
-  uint8_t hp;     // orig: 10
-  uint8_t str;    // orig: 1
+  int8_t max_hp; // orig: 10
+  int8_t hp;     // orig: 10
+  uint8_t str;   // orig: 1
   uint8_t xp;
   void print_player_info_on_lcd();
 } player;
@@ -598,7 +598,7 @@ void read_player_stats_from_eeprom()
   player.hp = player.max_hp;
 }
 
-void save_player_stats_from_eeprom()
+void save_player_stats_to_eeprom()
 {
   EEPROM.update(0, player.lvl);
   EEPROM.update(1, player.max_hp);
@@ -627,6 +627,13 @@ short SM_GAME_Tick(short state)
     Serial.println(player.lvl);
     if (is_start_selected && !digitalRead(joystickBtn))
     {
+      current_room_index = 0;
+      player.x = 6;
+      player.y = 3;
+      for (uint8_t i = 0; i < NUMBER_OF_ROOMS; i++)
+      {
+        cleared_rooms[i] = false;
+      }
       memcpy_P(&room_buffer, &game_map[current_room_index], sizeof(room_buffer));
       state = SM_GAME_OVERWORLD;
     }
@@ -670,6 +677,7 @@ short SM_GAME_Tick(short state)
   case SM_GAME_COMBAT:
     if (player.hp <= 0)
     {
+      save_player_stats_to_eeprom();
       state = SM_GAME_DEATH;
     }
     else if (enemies_in_room[current_enemy_index].hp <= 0)
@@ -707,7 +715,16 @@ short SM_GAME_Tick(short state)
         state = SM_GAME_OVERWORLD;
       }
     }
+    break;
+  case SM_GAME_DEATH:
+    if (!digitalRead(joystickBtn))
+    {
+      read_player_stats_from_eeprom();
+      state = SM_GAME_MENU;
+    }
+    break;
   }
+
   switch (state)
   {
   case SM_GAME_MENU:
@@ -830,6 +847,12 @@ short SM_GAME_Tick(short state)
     lcd.setCursor(0, 1);
     lcd.print(enemies_in_room[current_enemy_index].enemy_name);
     break;
+  case SM_GAME_DEATH:
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("you died."));
+    lcd.setCursor(0, 1);
+    lcd.print(F("press to restart"));
   }
   return state;
 }
