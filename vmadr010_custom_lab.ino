@@ -11,11 +11,6 @@
 #define COLUMNS 14
 #define NUMBER_OF_ROOMS 13
 
-// player scaling constants
-#define STR_INC_ON_LVL_UP 2
-#define HP_INC_ON_LVL_UP 5
-#define XP_THRESHOLD 10
-
 // lcd constants
 #define rs 8
 #define en 7
@@ -44,6 +39,38 @@ uint8_t combat_counter = 0;
 LiquidCrystal lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
 char lcd_buffer[18];
 Adafruit_PCD8544 nokia_screen = Adafruit_PCD8544(clk, din, d_c, ce, rst);
+
+struct game_screen
+{
+  char game_screen_buffer[ROWS][COLUMNS];
+  std::string get_screen_buffer();
+  void copy_room_to_buffer(char curr[ROWS][COLUMNS]);
+} game_screen;
+
+std::string game_screen::get_screen_buffer()
+{
+  std::string tmp;
+  short count = 0;
+  for (short i = 0; i < ROWS; i++)
+  {
+    for (short j = 0; j < COLUMNS; j++)
+    {
+      tmp.push_back(game_screen_buffer[i][j]);
+    }
+  }
+  return tmp;
+}
+void game_screen::copy_room_to_buffer(char curr[ROWS][COLUMNS])
+{
+  for (short i = 0; i < ROWS; i++)
+  {
+    for (short j = 0; j < COLUMNS; j++)
+    {
+      game_screen_buffer[i][j] = curr[i][j];
+    }
+  }
+  return;
+}
 
 struct player
 {
@@ -74,24 +101,29 @@ void player::print_player_info_on_lcd()
   lcd.print(lcd_buffer);
 }
 
+// player scaling constants
+#define STR_INC_ON_LVL_UP 2
+#define HP_INC_ON_LVL_UP 3
+#define XP_THRESHOLD 10
+
 // enemy constants
 #define GOBLIN_HP 2
 #define GOBLIN_STR 1
 #define GOBLIN_XP 2
 #define GOBLIN_TICK_DELAY 5
 
-#define SKELETON_HP 10
+#define SKELETON_HP 5
 #define SKELETON_STR 2
 #define SKELETON_XP 5
 #define SKELETON_TICK_DELAY 8
 
-#define KNIGHT_HP 15
-#define KNIGHT_STR 5
+#define KNIGHT_HP 10
+#define KNIGHT_STR 3
 #define KNIGHT_XP 10
 #define KNIGHT_TICK_DELAY 15
 
 #define DRAGON_HP 30
-#define DRAGON_STR 10
+#define DRAGON_STR 8
 #define DRAGON_XP 30
 #define DRAGON_TICK_DELAY 20
 
@@ -112,31 +144,102 @@ struct enemy
   uint8_t xp_on_kill;
   uint8_t move_tick_delay_counter;
   void move_towards_avatar();
+  bool is_occupied_by_other_enemy(uint8_t x, uint8_t y);
+  bool is_open_space(uint8_t x, uint8_t y);
 };
 
 enemy enemies_in_room[3];
 
 short enemy_move_counter = 0;
 
+bool enemy::is_occupied_by_other_enemy(uint8_t x, uint8_t y)
+{
+  for (uint8_t i = 0; i < num_of_enemies_buffer; i++)
+  {
+    if (i == current_enemy_index)
+    {
+    }
+    else
+    {
+      if ((enemies_in_room[i].x == x) && (enemies_in_room[i].y == y))
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool enemy::is_open_space(uint8_t x, uint8_t y)
+{
+  if (game_screen.game_screen_buffer[y][x] == ' ')
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
 void enemy::move_towards_avatar()
 {
   if (hp > 0 && !cleared_rooms[current_room_index])
   {
+    std::vector<uint8_t> potential_moves;
     if (player.y > y)
     {
-      y++;
+      if (!is_occupied_by_other_enemy(x, y + 1) && is_open_space(x, y + 1))
+      {
+        potential_moves.push_back(0);
+      }
     }
     else if (player.y < y)
     {
-      y--;
+      if (!is_occupied_by_other_enemy(x, y - 1) && is_open_space(x, y - 1))
+      {
+        potential_moves.push_back(1);
+      }
     }
     if (player.x > x)
     {
-      x++;
+      if (!is_occupied_by_other_enemy(x + 1, y) && is_open_space(x + 1, y))
+      {
+        potential_moves.push_back(2);
+      }
     }
     else if (player.x < x)
     {
+      if (!is_occupied_by_other_enemy(x - 1, y) && is_open_space(x - 1, y))
+      {
+        potential_moves.push_back(3);
+      }
+    }
+    uint8_t current_move = 0;
+    if (potential_moves.size() > 1)
+    {
+      int random_index = random(2);
+      current_move = potential_moves.at(random_index);
+    }
+    else
+    {
+      current_move = potential_moves.back();
+    }
+    switch (current_move)
+    {
+    case 0:
+      y++;
+      break;
+    case 1:
+      y--;
+      break;
+    case 2:
+      x++;
+      break;
+    case 3:
       x--;
+      break;
+    default:
+      break;
     }
   }
 }
@@ -249,7 +352,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
         1,
         0,
         2,
-        {{"skeleton", 12, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skeleton", 1, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}}},
+        {{"skele", 12, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skele", 1, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}}},
     // room 6
     {
         {{'+', '-', '-', '-', '-', '-', ' ', ' ', '-', '-', '-', '-', '-', '+'},
@@ -263,7 +366,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
         2,
         0,
         3,
-        {{"skeleton", 2, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skeleton", 6, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_HP}, {"skeleton", 8, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_HP, SKELETON_XP}}},
+        {{"skele", 2, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}, {"skele", 6, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_HP}, {"skele", 8, 4, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_HP, SKELETON_XP}}},
     // room 7
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -276,7 +379,7 @@ const room game_map[NUMBER_OF_ROOMS] PROGMEM = {
      0,
      1,
      1,
-     {{"skeleton", 5, 2, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}}},
+     {{"skele", 5, 2, 'S', SKELETON_TICK_DELAY, SKELETON_HP, SKELETON_STR, SKELETON_XP}}},
     // room 8
     {{{'+', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '+'},
       {'|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'},
@@ -361,38 +464,6 @@ void copy_enemies_to_buffer()
       enemies_in_room[i].move_tick_delay_counter = 0;
     }
   }
-}
-
-struct game_screen
-{
-  char game_screen_buffer[ROWS][COLUMNS];
-  std::string get_screen_buffer();
-  void copy_room_to_buffer(char curr[ROWS][COLUMNS]);
-} game_screen;
-
-std::string game_screen::get_screen_buffer()
-{
-  std::string tmp;
-  short count = 0;
-  for (short i = 0; i < ROWS; i++)
-  {
-    for (short j = 0; j < COLUMNS; j++)
-    {
-      tmp.push_back(game_screen_buffer[i][j]);
-    }
-  }
-  return tmp;
-}
-void game_screen::copy_room_to_buffer(char curr[ROWS][COLUMNS])
-{
-  for (short i = 0; i < ROWS; i++)
-  {
-    for (short j = 0; j < COLUMNS; j++)
-    {
-      game_screen_buffer[i][j] = curr[i][j];
-    }
-  }
-  return;
 }
 
 void put_enemies_on_screen()
@@ -627,7 +698,6 @@ short SM_GAME_Tick(short state)
   case SM_GAME_INIT:
     state = SM_GAME_MENU;
   case SM_GAME_MENU:
-    Serial.println(player.lvl);
     if (is_start_selected && !digitalRead(joystickBtn))
     {
       current_room_index = 0;
@@ -674,6 +744,14 @@ short SM_GAME_Tick(short state)
             player_combat_turn();
             enemy_combat_turn();
           }
+          else if (enemies_in_room[i].x == player.x && enemies_in_room[i].y == player.y)
+          {
+            state = SM_GAME_COMBAT;
+            current_enemy_index = i;
+            lcd.clear();
+            player_combat_turn();
+            enemy_combat_turn();
+          }
         }
       }
     }
@@ -690,24 +768,19 @@ short SM_GAME_Tick(short state)
     }
     break;
   case SM_GAME_COMBAT_WIN:
-    if (!digitalRead(joystickBtn))
+    if (!digitalRead(joystickBtn) || currInput != NEUTRAL)
     {
       player.xp += enemies_in_room[current_enemy_index].xp_on_kill;
       if (player.xp >= XP_THRESHOLD)
       {
-        player.lvl++;
-        player.str += STR_INC_ON_LVL_UP;
-        player.max_hp += HP_INC_ON_LVL_UP;
+        while (player.xp > XP_THRESHOLD)
+        {
+          player.lvl++;
+          player.str += STR_INC_ON_LVL_UP;
+          player.max_hp += HP_INC_ON_LVL_UP;
+          player.xp -= XP_THRESHOLD;
+        }
         player.hp = player.max_hp;
-        if (player.xp > XP_THRESHOLD)
-        {
-          uint8_t overflow = player.xp % XP_THRESHOLD;
-          player.xp = overflow;
-        }
-        else
-        {
-          player.xp = 0;
-        }
       }
       check_if_room_clear();
       if (cleared_rooms[NUMBER_OF_ROOMS - 1])
@@ -752,7 +825,7 @@ short SM_GAME_Tick(short state)
     }
     player.print_player_info_on_lcd();
     nokia_screen.clearDisplay();
-    nokia_screen.setCursor(30, 5);
+    nokia_screen.setCursor(28, 5);
     nokia_screen.println(F("ROGUE"));
     if (is_start_selected)
     {
@@ -919,7 +992,6 @@ void setup()
   nokia_screen.setTextSize(1);
   nokia_screen.setTextColor(BLACK);
 
-  // reset_player_stats_on_eeprom();
   read_player_stats_from_eeprom();
 }
 
